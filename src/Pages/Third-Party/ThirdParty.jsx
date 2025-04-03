@@ -317,21 +317,7 @@ const ExpenseManagement = () => {
                         required
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                      <select
-                        name="category"
-                        value={formData.category}
-                        onChange={handleChange}
-                        className="w-full border border-gray-300 p-2 rounded"
-                      >
-                        <option value="misc">Miscellaneous</option>
-                        <option value="welding">Welding</option>
-                        <option value="parts">Vehicle Parts</option>
-                        <option value="utilities">Utilities</option>
-                        <option value="maintenance">Maintenance</option>
-                      </select>
-                    </div>
+                  
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                       <input

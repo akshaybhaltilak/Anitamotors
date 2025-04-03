@@ -166,6 +166,12 @@ export default function Dashboard() {
       icon: Smile,
       color: 'from-amber-500 to-amber-600',
       onClick: () => navigate('/maintenance')
+    },
+    { 
+      title: 'Services',
+      icon: ShoppingCart,
+      color: 'from-red-500 to-red-600',
+      onClick: () => navigate('/services')
     }
   ];
 

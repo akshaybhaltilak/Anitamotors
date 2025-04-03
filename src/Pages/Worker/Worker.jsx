@@ -22,7 +22,7 @@ const WorkersPage = () => {
     note: ''
   });
 
-  const roles = ['worker', 'mechanic', 'salesperson', 'manager', 'electrician', 'helper'];
+  const roles = ['Head Mechanic','Service Manager','worker', 'mechanic', 'salesperson', 'manager', 'electrician', 'helper'];
   const categories = ['workshop', 'shop', 'outsider', 'office', 'delivery'];
 
   // Fetch workers data from Firebase
@@ -245,7 +245,7 @@ const WorkersPage = () => {
               </div>
 
               <div className="flex gap-4">
-                <div className="flex-1">
+                {/* <div className="flex-1">
                   <label className="block text-sm font-medium mb-1">Age</label>
                   <input
                     type="number"
@@ -255,7 +255,7 @@ const WorkersPage = () => {
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Age"
                   />
-                </div>
+                </div> */}
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-1">Phone Number*</label>
                   <input

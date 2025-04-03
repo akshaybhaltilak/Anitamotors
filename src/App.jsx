@@ -1,14 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import Layout from './Layout';
-import Dashboard from './Pages/Dashboard/Dashboard';
 import WorkersPage from './Pages/Worker/Worker';
-import SparePartsManagement from './Pages/SpareParts/SpareParts';
-import Vehicle from './Pages/VehicleEntry/Vechicle';
-import ExpenseManagement from './Pages/Third-Party/ThirdParty';
 import WorkerDetailsPage from './Pages/Worker/WorkerDetails';
-import VehicleBilling from './Pages/VehicleEntry/VechicleBilling/VechicleBilling';
-import Invoice from './Pages/Billing/Billing';
+import SparePartsManagement from './Pages/SpareParts/SpareParts';
+import Dashboard from './Pages/Dashboard/Dashboard';
+import Vehicles from './Pages/VehicleEntry/Vechicle';
+import Layout from './Layout';
+import ThirdParty from './Pages/Third-Party/ThirdParty';
+import BillGenerator from './Pages/BillGenerator/BillGenerator';
+import Servicing from './Pages/Services/Services';
 
 // Login component
 const Login = ({ setIsAuthenticated }) => {
@@ -118,15 +118,14 @@ const App = () => {
               <Layout />
             </ProtectedRoute>
           }>
-            <Route index element={<Dashboard/>} />
+            <Route index element={<Dashboard />} />
             <Route path="workers" element={<WorkersPage />} />
             <Route path="spare-parts" element={<SparePartsManagement />} />
-            <Route path="vehicles" element={<Vehicle />} />
-            <Route path="maintenance" element={<ExpenseManagement />} />
+            <Route path="vehicles" element={<Vehicles />} />
+            <Route path="services" element={<Servicing />} />
+            <Route path="bill" element={<BillGenerator />} />
+            <Route path="maintenance" element={<ThirdParty />} />
             <Route path="worker/:workerId" element={<WorkerDetailsPage />} />
-            <Route path="/vehicles/:vehicleId/details" element={<VehicleBilling />} />
-            <Route path="billing" element={<Invoice />} />
-
           </Route>
           
           <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} />} />

@@ -278,41 +278,6 @@ const WorkerDetailsPage = () => {
     window.open(`https://wa.me/91${worker.phone}?text=${encodedMessage}`, '_blank');
   };
 
-  // Render days of the month for attendance
-  // const renderAttendanceDays = () => {
-  //   if (!currentMonth) return null;
-
-  //   const [year, month] = currentMonth.split('-').map(Number);
-  //   const daysInMonth = new Date(year, month, 0).getDate();
-  //   const days = [];
-
-  //   for (let i = 1; i <= daysInMonth; i++) {
-  //     const dayStatus = worker.attendance &&
-  //       worker.attendance[currentMonth] &&
-  //       worker.attendance[currentMonth][i] ?
-  //       worker.attendance[currentMonth][i] : 'none';
-
-  //     let statusClass = 'bg-gray-100';
-  //     if (dayStatus === 'present') statusClass = 'bg-green-100 text-green-700';
-  //     if (dayStatus === 'absent') statusClass = 'bg-red-100 text-red-700';
-
-  //     days.push(
-  //       <button
-  //         key={i}
-  //         className={`w-10 h-10 ${statusClass} rounded-lg flex items-center justify-center font-medium text-sm`}
-  //         onClick={() => handleAttendanceChange(i, dayStatus)}
-  //       >
-  //         {i}
-  //       </button>
-  //     );
-  //   }
-
-  //   return (
-  //     <div className="grid grid-cols-7 gap-2 mt-3">
-  //       {days}
-  //     </div>
-  //   );
-  // };
 
   if (loading) {
     return (
@@ -415,7 +380,7 @@ const WorkerDetailsPage = () => {
             </div>
 
             <div className="flex gap-4">
-              <div className="flex-1">
+              {/* <div className="flex-1">
                 <label className="block text-sm font-medium mb-1">Age</label>
                 <input
                   type="number"
@@ -423,7 +388,7 @@ const WorkerDetailsPage = () => {
                   onChange={(e) => setEditedWorker({ ...editedWorker, age: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </div>
+              </div> */}
               <div className="flex-1">
                 <label className="block text-sm font-medium mb-1">Phone Number*</label>
                 <input
