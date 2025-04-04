@@ -97,7 +97,7 @@ function Servicing() {
       // Update spare parts inventory quantities
       if (selectedParts.length > 0) {
         for (const part of selectedParts) {
-          const partRef = ref(database, `spareParts/₹{part.id}`);
+          const partRef = ref(database, `spareParts/${part.id}`);
           const snapshot = await get(partRef);
           const currentPart = snapshot.val();
           
@@ -109,7 +109,7 @@ function Servicing() {
                 quantity: newQuantity
               });
             } else {
-              throw new Error(`Not enough quantity for ₹{part.name}`);
+              throw new Error(`Not enough quantity for ${part.name}`);
             }
           }
         }
