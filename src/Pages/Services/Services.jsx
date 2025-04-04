@@ -97,7 +97,7 @@ function Servicing() {
       // Update spare parts inventory quantities
       if (selectedParts.length > 0) {
         for (const part of selectedParts) {
-          const partRef = ref(database, `spareParts/${part.id}`);
+          const partRef = ref(database, `spareParts/₹{part.id}`);
           const snapshot = await get(partRef);
           const currentPart = snapshot.val();
           
@@ -109,7 +109,7 @@ function Servicing() {
                 quantity: newQuantity
               });
             } else {
-              throw new Error(`Not enough quantity for ${part.name}`);
+              throw new Error(`Not enough quantity for ₹{part.name}`);
             }
           }
         }
@@ -477,8 +477,8 @@ function Servicing() {
                                   className="w-16 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                               </td>
-                              <td className="px-2 py-2 text-sm text-right text-gray-900">${part.price}</td>
-                              <td className="px-2 py-2 text-sm text-right text-gray-900">${(part.price * part.quantity).toFixed(2)}</td>
+                              <td className="px-2 py-2 text-sm text-right text-gray-900">₹{part.price}</td>
+                              <td className="px-2 py-2 text-sm text-right text-gray-900">₹{(part.price * part.quantity).toFixed(2)}</td>
                               <td className="px-2 py-2 text-right">
                                 <button
                                   type="button"
@@ -496,7 +496,7 @@ function Servicing() {
                         <tfoot>
                           <tr className="border-t-2 border-gray-300">
                             <td colSpan="3" className="px-2 py-2 text-sm font-medium text-gray-900 text-right">Total Parts Cost:</td>
-                            <td className="px-2 py-2 text-sm font-medium text-gray-900 text-right">${calculateTotalPartsCost().toFixed(2)}</td>
+                            <td className="px-2 py-2 text-sm font-medium text-gray-900 text-right">₹{calculateTotalPartsCost().toFixed(2)}</td>
                             <td></td>
                           </tr>
                         </tfoot>
@@ -552,7 +552,7 @@ function Servicing() {
                     
                     <div className="mb-4">
                       <label className="block text-gray-700 text-sm font-medium mb-1">
-                        Service Charge Amount ($)
+                        Service Charge Amount (₹)
                       </label>
                       <input
                         type="number"
@@ -571,7 +571,7 @@ function Servicing() {
                         <p className="text-gray-500 text-xs">Service charge + parts</p>
                       </div>
                       <div className="text-xl font-semibold text-blue-800">
-                        ${(parseFloat(formData.paymentAmount || 0) + calculateTotalPartsCost()).toFixed(2)}
+                      ₹{(parseFloat(formData.paymentAmount || 0) + calculateTotalPartsCost()).toFixed(2)}
                       </div>
                     </div>
                   </div>

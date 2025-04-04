@@ -340,7 +340,7 @@ export default function SparePartsManagement() {
             />
           </div>
           
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700">Part Number*</label>
             <input
               type="text"
@@ -350,9 +350,9 @@ export default function SparePartsManagement() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50 p-2 border"
               required
             />
-          </div>
+          </div> */}
           
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700">Category</label>
             <input
               type="text"
@@ -367,7 +367,7 @@ export default function SparePartsManagement() {
                 <option key={index} value={category} />
               ))}
             </datalist>
-          </div>
+          </div> */}
           
           <div>
             <label className="block text-sm font-medium text-gray-700">Quantity</label>
@@ -428,7 +428,7 @@ export default function SparePartsManagement() {
             />
           </div>
           
-          <div className="md:col-span-2">
+          {/* <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700">Image URL (Optional)</label>
             <input
               type="text"
@@ -439,7 +439,7 @@ export default function SparePartsManagement() {
               placeholder="https://example.com/image.jpg"
             />
           </div>
-          
+           */}
           <div className="md:col-span-2 mt-4">
             <button
               onClick={handleSavePart}
