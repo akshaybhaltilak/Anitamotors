@@ -20,7 +20,7 @@ const Vehicle = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchFilter, setSearchFilter] = useState('name');
+  const [searchFilter, setSearchFilter] = useState('chassisNo'); // Default to chassis number
   const [showSoldVehicles, setShowSoldVehicles] = useState(false);
 
   // New state for individual vehicle units
@@ -55,7 +55,10 @@ const Vehicle = () => {
         status: 'available'
       })) : [];
       setVehicles(vehiclesList);
-      setFilteredVehicles(vehiclesList);
+      // Only set filtered vehicles if not showing sold vehicles
+      if (!showSoldVehicles) {
+        setFilteredVehicles(vehiclesList);
+      }
     });
 
     onValue(soldVehiclesRef, (snapshot) => {
@@ -66,6 +69,10 @@ const Vehicle = () => {
         status: 'sold'
       })) : [];
       setSoldVehicles(soldList);
+      // If showing sold vehicles, update filtered list
+      if (showSoldVehicles) {
+        setFilteredVehicles(soldList);
+      }
     });
 
     // Fetch individual vehicle units
@@ -78,7 +85,7 @@ const Vehicle = () => {
       })) : [];
       setVehicleUnits(unitsList);
     });
-  }, []);
+  }, [showSoldVehicles]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -206,13 +213,20 @@ const Vehicle = () => {
   // Delete a vehicle
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this vehicle?')) {
-      remove(ref(database, `vehicles/${id}`));
-
-      vehicleUnits.forEach(unit => {
-        if (unit.vehicleId === id) {
-          remove(ref(database, `vehicleUnits/${unit.id}`));
-        }
-      });
+      // Determine which database to delete from based on status
+      const vehicleToDelete = [...vehicles, ...soldVehicles].find(v => v.id === id);
+      
+      if (vehicleToDelete) {
+        const path = vehicleToDelete.status === 'sold' ? 'soldVehicles' : 'vehicles';
+        remove(ref(database, `${path}/${id}`));
+  
+        // Delete all associated units
+        vehicleUnits.forEach(unit => {
+          if (unit.vehicleId === id) {
+            remove(ref(database, `vehicleUnits/${unit.id}`));
+          }
+        });
+      }
     }
   };
 
@@ -230,17 +244,25 @@ const Vehicle = () => {
     const searchIn = showSoldVehicles ? soldVehicles : vehicles;
 
     if (searchFilter === 'chassisNo') {
+      // More efficient chassis number search
       const matchingUnits = vehicleUnits.filter(unit =>
         unit.chassisNo && unit.chassisNo.toLowerCase().includes(query)
       );
 
       if (matchingUnits.length > 0) {
         const matchingVehicles = matchingUnits.map(unit => {
-          const vehicle = searchIn.find(v => v.id === unit.vehicleId);
+          // Find the vehicle in either available or sold list
+          const vehicle = [...vehicles, ...soldVehicles].find(v => v.id === unit.vehicleId);
           return vehicle ? { ...vehicle, unitDetails: unit } : null;
         }).filter(Boolean);
 
-        setFilteredVehicles(matchingVehicles);
+        // Filter matching vehicles based on current view (sold or available)
+        const filteredMatches = matchingVehicles.filter(v => 
+          (showSoldVehicles && v.status === 'sold') || 
+          (!showSoldVehicles && v.status === 'available')
+        );
+
+        setFilteredVehicles(filteredMatches);
         setShowVehicleDetails(false);
       } else {
         setFilteredVehicles([]);
@@ -260,6 +282,14 @@ const Vehicle = () => {
       setFilteredVehicles(filtered);
       setShowVehicleDetails(false);
     }
+  };
+
+  // Toggle between available and sold vehicles
+  const toggleSoldVehiclesView = () => {
+    const newShowSoldValue = !showSoldVehicles;
+    setShowSoldVehicles(newShowSoldValue);
+    setFilteredVehicles(newShowSoldValue ? soldVehicles : vehicles);
+    setSearchQuery(''); // Reset search when toggling view
   };
 
   // View all units of a specific vehicle
@@ -283,7 +313,8 @@ const Vehicle = () => {
   };
 
   const handleSellUnit = (unit) => {
-    const vehicle = vehicles.find(v => v.id === unit.vehicleId);
+    // Find vehicle from either available or sold list
+    const vehicle = [...vehicles, ...soldVehicles].find(v => v.id === unit.vehicleId);
 
     if (vehicle) {
       setSelectedVehicle({
@@ -324,18 +355,22 @@ const Vehicle = () => {
     };
 
     if (finalBillData.unitId) {
+      // Selling a specific unit
       set(ref(database, `sales/${newSaleKey}`), saleData);
       
+      // Update the unit status to sold
       update(ref(database, `vehicleUnits/${finalBillData.unitId}`), {
         status: 'sold',
         saleId: newSaleKey
       });
 
+      // Count all units and sold units for this vehicle
       const vehicleUnitsCount = vehicleUnits.filter(u => u.vehicleId === selectedVehicle.id).length;
       const soldUnitsCount = vehicleUnits.filter(u => 
         u.vehicleId === selectedVehicle.id && u.status === 'sold'
-      ).length + 1;
+      ).length + 1; // +1 for the unit being sold now
 
+      // If all units are sold, move vehicle to soldVehicles collection
       if (soldUnitsCount >= vehicleUnitsCount) {
         const soldVehicleData = {
           ...selectedVehicle,
@@ -346,15 +381,18 @@ const Vehicle = () => {
         set(ref(database, `soldVehicles/${selectedVehicle.id}`), soldVehicleData);
         remove(ref(database, `vehicles/${selectedVehicle.id}`));
       } else {
+        // Otherwise just update the quantity
         update(ref(database, `vehicles/${selectedVehicle.id}`), {
           quantity: selectedVehicle.quantity - 1
         });
       }
     } else {
+      // Selling multiple units (bulk sale)
       set(ref(database, `sales/${newSaleKey}`), saleData);
       const newQuantity = selectedVehicle.quantity - finalBillData.quantity;
 
       if (newQuantity <= 0) {
+        // If no more units left, move vehicle to soldVehicles
         const soldVehicleData = {
           ...selectedVehicle,
           status: 'sold',
@@ -364,11 +402,13 @@ const Vehicle = () => {
         set(ref(database, `soldVehicles/${selectedVehicle.id}`), soldVehicleData);
         remove(ref(database, `vehicles/${selectedVehicle.id}`));
       } else {
+        // Otherwise just update the quantity
         update(ref(database, `vehicles/${finalBillData.vehicleId}`), {
           quantity: newQuantity
         });
       }
 
+      // Mark the appropriate number of units as sold
       const availableUnits = vehicleUnits.filter(
         unit => unit.vehicleId === finalBillData.vehicleId && unit.status === 'available'
       );
@@ -389,22 +429,28 @@ const Vehicle = () => {
   // Render vehicle card
   const renderVehicleCard = (vehicle) => (
     <div key={vehicle.id} className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 flex flex-col">
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 text-white">
+      <div className={`${vehicle.status === 'sold' ? 'bg-gradient-to-r from-gray-600 to-gray-700' : 'bg-gradient-to-r from-blue-600 to-indigo-600'} p-5 text-white`}>
         <h3 className="text-xl font-bold mb-1 flex items-center">
           {vehicle.name}
         </h3>
-        <p className="text-sm text-blue-100">Model: {vehicle.model}</p>
+        <p className="text-sm text-blue-100">Model: {vehicle.model || 'N/A'}</p>
+        {vehicle.status === 'sold' && (
+          <span className="inline-block mt-2 px-2 py-1 bg-red-500 text-white text-xs rounded-full">SOLD</span>
+        )}
       </div>
 
       <div className="p-5 flex-grow">
         <div className="flex justify-between items-center mb-4">
           <span className="font-bold text-lg text-indigo-800">₹{vehicle.price.toLocaleString()}</span>
           <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center ${
+            vehicle.status === 'sold' ? "bg-gray-100 text-gray-800" :
             vehicle.quantity > 10 ? "bg-green-100 text-green-800" :
             vehicle.quantity > 0 ? "bg-yellow-100 text-yellow-800" :
             "bg-red-100 text-red-800"
           }`}>
-            {vehicle.quantity > 0 ? (
+            {vehicle.status === 'sold' ? (
+              <>Sold Out</>
+            ) : vehicle.quantity > 0 ? (
               <>{vehicle.quantity} in stock</>
             ) : (
               <>Out of stock</>
@@ -436,12 +482,20 @@ const Vehicle = () => {
             <p className="text-gray-700 line-clamp-2">{vehicle.specifications}</p>
           </div>
         )}
+        
+        {vehicle.dateSold && (
+          <div className="text-sm mb-4 bg-gray-50 p-3 rounded-lg">
+            <span className="text-gray-600 font-medium block mb-1">Sold Date</span>
+            <p className="text-gray-700">{new Date(vehicle.dateSold).toLocaleDateString()}</p>
+          </div>
+        )}
       </div>
 
       <div className="flex justify-between p-4 border-t border-gray-100 bg-gray-50">
         <button
           onClick={() => handleEdit(vehicle)}
           className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1 font-medium"
+          disabled={vehicle.status === 'sold'}
         >
           <Edit size={16} />
           <span>Edit</span>
@@ -463,7 +517,7 @@ const Vehicle = () => {
           <span>Units</span>
         </button>
 
-        {vehicle.quantity > 0 && (
+        {vehicle.status !== 'sold' && vehicle.quantity > 0 && (
           <button
             onClick={() => handleSellClick(vehicle)}
             className="px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-1 font-medium"
@@ -481,13 +535,16 @@ const Vehicle = () => {
     
     return (
       <div key={vehicle.id} className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 flex flex-col">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-5 text-white">
+        <div className={`${vehicle.status === 'sold' ? 'bg-gradient-to-r from-gray-600 to-gray-700' : 'bg-gradient-to-r from-blue-600 to-indigo-600'} p-5 text-white`}>
           <h3 className="text-xl font-bold mb-1 flex items-center">
             {vehicle.name}
           </h3>
-          <p className="text-sm text-blue-100">Model: {vehicle.model}</p>
+          <p className="text-sm text-blue-100">Model: {vehicle.model || 'N/A'}</p>
           {hasUnitDetails && (
-            <p className="text-sm text-blue-100 mt-1">Chassis: {vehicle.unitDetails.chassisNo}</p>
+            <p className="text-sm bg-blue-800 px-2 py-1 rounded mt-2 inline-block">Chassis: {vehicle.unitDetails.chassisNo}</p>
+          )}
+          {vehicle.status === 'sold' && !hasUnitDetails && (
+            <span className="inline-block mt-2 px-2 py-1 bg-red-500 text-white text-xs rounded-full">SOLD</span>
           )}
         </div>
 
@@ -498,6 +555,7 @@ const Vehicle = () => {
               hasUnitDetails ? (
                 vehicle.unitDetails.status === 'available' ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
               ) : (
+                vehicle.status === 'sold' ? "bg-gray-100 text-gray-800" :
                 vehicle.quantity > 10 ? "bg-green-100 text-green-800" :
                 vehicle.quantity > 0 ? "bg-yellow-100 text-yellow-800" :
                 "bg-red-100 text-red-800"
@@ -509,7 +567,9 @@ const Vehicle = () => {
                 </span>
               ) : (
                 <>
-                  {vehicle.quantity > 0 ? (
+                  {vehicle.status === 'sold' ? (
+                    <>Sold Out</>
+                  ) : vehicle.quantity > 0 ? (
                     <>{vehicle.quantity} in stock</>
                   ) : (
                     <>Out of stock</>
@@ -566,18 +626,27 @@ const Vehicle = () => {
                   <p className="text-gray-700 line-clamp-2">{vehicle.specifications}</p>
                 </div>
               )}
+              
+              {vehicle.dateSold && (
+                <div className="text-sm mb-4 bg-gray-50 p-3 rounded-lg">
+                  <span className="text-gray-600 font-medium block mb-1">Sold Date</span>
+                  <p className="text-gray-700">{new Date(vehicle.dateSold).toLocaleDateString()}</p>
+                </div>
+              )}
             </>
           )}
         </div>
 
         <div className="flex justify-between p-4 border-t border-gray-100 bg-gray-50">
-          <button
-            onClick={() => handleEdit(vehicle)}
-            className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1 font-medium"
-          >
-            <Edit size={16} />
-            <span>Edit</span>
-          </button>
+          {vehicle.status !== 'sold' && (
+            <button
+              onClick={() => handleEdit(vehicle)}
+              className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1 font-medium"
+            >
+              <Edit size={16} />
+              <span>Edit</span>
+            </button>
+          )}
 
           <button
             onClick={() => handleDelete(vehicle.id)}
@@ -595,7 +664,8 @@ const Vehicle = () => {
             <span>Units</span>
           </button>
 
-          {(vehicle.quantity > 0 || (hasUnitDetails && vehicle.unitDetails.status === 'available')) && (
+          {((vehicle.status !== 'sold' && vehicle.quantity > 0) || 
+            (hasUnitDetails && vehicle.unitDetails.status === 'available')) && (
             <button
               onClick={() => hasUnitDetails ? handleSellUnit(vehicle.unitDetails) : handleSellClick(vehicle)}
               className="px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors flex items-center gap-1 font-medium"
@@ -638,402 +708,296 @@ const Vehicle = () => {
           />
         ) : showVehicleUnits ? (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-2xl font-bold text-blue-700 mb-4">
-              Enter Individual Vehicle Details
-            </h2>
-            <p className="mb-4 text-gray-600">
-              Please enter details for each of the {vehicleUnits.length} vehicles in this batch.
-            </p>
-
+          <h2 className="text-xl font-bold mb-4">Enter Vehicle Unit Details</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white border-collapse">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border px-4 py-2 text-left">#</th>
+                  <th className="border px-4 py-2 text-left">Motor No</th>
+                  <th className="border px-4 py-2 text-left">Chassis No</th>
+                  <th className="border px-4 py-2 text-left">Battery No</th>
+                  <th className="border px-4 py-2 text-left">Controller No</th>
+                  <th className="border px-4 py-2 text-left">Color</th>
+                </tr>
+              </thead>
+              <tbody>
+                {vehicleUnits.map((unit, index) => (
+                  <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                    <td className="border px-4 py-2">{index + 1}</td>
+                    <td className="border px-4 py-2">
+                      <input
+                        type="text"
+                        className="w-full p-1 border rounded"
+                        value={unit.motorNo || ''}
+                        onChange={(e) => handleUnitInputChange(index, 'motorNo', e.target.value)}
+                      />
+                    </td>
+                    <td className="border px-4 py-2">
+                      <input
+                        type="text"
+                        className="w-full p-1 border rounded"
+                        value={unit.chassisNo || ''}
+                        onChange={(e) => handleUnitInputChange(index, 'chassisNo', e.target.value)}
+                      />
+                    </td>
+                    <td className="border px-4 py-2">
+                      <input
+                        type="text"
+                        className="w-full p-1 border rounded"
+                        value={unit.batteryNo || ''}
+                        onChange={(e) => handleUnitInputChange(index, 'batteryNo', e.target.value)}
+                      />
+                    </td>
+                    <td className="border px-4 py-2">
+                      <input
+                        type="text"
+                        className="w-full p-1 border rounded"
+                        value={unit.controllerNo || ''}
+                        onChange={(e) => handleUnitInputChange(index, 'controllerNo', e.target.value)}
+                      />
+                    </td>
+                    <td className="border px-4 py-2">
+                      <input
+                        type="text"
+                        className="w-full p-1 border rounded"
+                        value={unit.color || ''}
+                        onChange={(e) => handleUnitInputChange(index, 'color', e.target.value)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-4 flex justify-end space-x-3">
+            <button
+              onClick={resetForm}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={saveVehicleUnits}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Save All Units
+            </button>
+          </div>
+        </div>
+      ) : showVehicleDetails ? (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4 flex items-center">
+            <List size={20} className="mr-2" />
+            Vehicle Units
+          </h2>
+          {selectedVehicleDetails && selectedVehicleDetails.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Unit #
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Motor No.
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Chassis No.
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Battery No.
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Controller No.
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Color
-                    </th>
+              <table className="min-w-full bg-white border-collapse">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border px-4 py-2 text-left">#</th>
+                    <th className="border px-4 py-2 text-left">Chassis No</th>
+                    <th className="border px-4 py-2 text-left">Motor No</th>
+                    <th className="border px-4 py-2 text-left">Battery No</th>
+                    <th className="border px-4 py-2 text-left">Controller No</th>
+                    <th className="border px-4 py-2 text-left">Color</th>
+                    <th className="border px-4 py-2 text-left">Status</th>
+                    <th className="border px-4 py-2 text-left">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {vehicleUnits.map((unit, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {index + 1}
+                <tbody>
+                  {selectedVehicleDetails.map((unit, index) => (
+                    <tr key={unit.id || index} className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}>
+                      <td className="border px-4 py-2">{index + 1}</td>
+                      <td className="border px-4 py-2">{unit.chassisNo || 'N/A'}</td>
+                      <td className="border px-4 py-2">{unit.motorNo || 'N/A'}</td>
+                      <td className="border px-4 py-2">{unit.batteryNo || 'N/A'}</td>
+                      <td className="border px-4 py-2">{unit.controllerNo || 'N/A'}</td>
+                      <td className="border px-4 py-2">{unit.color || 'N/A'}</td>
+                      <td className="border px-4 py-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          unit.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {unit.status === 'available' ? 'Available' : 'Sold'}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="text"
-                          value={unit.motorNo || ''}
-                          onChange={(e) => handleUnitInputChange(index, 'motorNo', e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter motor number"
-                          required
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="text"
-                          value={unit.chassisNo || ''}
-                          onChange={(e) => handleUnitInputChange(index, 'chassisNo', e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter chassis number"
-                          required
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="text"
-                          value={unit.batteryNo || ''}
-                          onChange={(e) => handleUnitInputChange(index, 'batteryNo', e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter battery number"
-                          required
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="text"
-                          value={unit.controllerNo || ''}
-                          onChange={(e) => handleUnitInputChange(index, 'controllerNo', e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter controller number"
-                          required
-                        />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="text"
-                          value={unit.color || ''}
-                          onChange={(e) => handleUnitInputChange(index, 'color', e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter color"
-                          required
-                        />
+                      <td className="border px-4 py-2">
+                        {unit.status === 'available' && (
+                          <button
+                            onClick={() => handleSellUnit(unit)}
+                            className="px-3 py-1 bg-green-50 text-green-600 rounded hover:bg-green-100 transition-colors text-sm"
+                          >
+                            Sell
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg">
+              <AlertCircle size={48} className="text-yellow-500 mb-4" />
+              <p className="text-gray-600 text-center">No units found for this vehicle.</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Vehicle Form */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 className="text-xl font-bold mb-4">{isEditing ? 'Edit Vehicle' : 'Add New Vehicle'}</h2>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">Vehicle Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">Model</label>
+                <input
+                  type="text"
+                  name="model"
+                  value={formData.model}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">Quantity</label>
+                <input
+                  type="number"
+                  name="quantity"
+                  value={formData.quantity}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="0"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">Price (₹)</label>
+                <input
+                  type="text"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">Engine Capacity</label>
+                <input
+                  type="text"
+                  name="engineCapacity"
+                  value={formData.engineCapacity}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-gray-700 font-medium mb-2">Specifications</label>
+                <textarea
+                  name="specifications"
+                  value={formData.specifications}
+                  onChange={handleInputChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-32"
+                ></textarea>
+              </div>
+              <div className="md:col-span-2 flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  {isEditing ? 'Update Vehicle' : 'Add Vehicle'}
+                </button>
+              </div>
+            </form>
+          </div>
 
-            <div className="mt-6 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowVehicleUnits(false)}
-                className="px-4 py-2 mr-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={saveVehicleUnits}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Save All Units
-              </button>
+          {/* Search and Filter */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="relative flex-grow max-w-xl">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search size={18} className="text-gray-500" />
+                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearch}
+                  placeholder="Search vehicles..."
+                  className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex items-center space-x-3">
+                <select
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Fields</option>
+                  <option value="name">Name</option>
+                  <option value="model">Model</option>
+                  <option value="chassisNo">Chassis No</option>
+                </select>
+                <button
+                  onClick={toggleSoldVehiclesView}
+                  className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                    showSoldVehicles 
+                      ? 'bg-gray-600 text-white hover:bg-gray-700'
+                      : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                  }`}
+                >
+                  <Archive size={18} className="mr-2" />
+                  {showSoldVehicles ? 'Show Available' : 'Show Sold'}
+                </button>
+              </div>
             </div>
           </div>
-        ) : showVehicleDetails ? (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-2xl font-bold text-blue-700 mb-4">
-              Vehicle Details
-            </h2>
 
-            {Array.isArray(selectedVehicleDetails) ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Unit #
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Motor No.
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Chassis No.
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Battery No.
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Controller No.
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Color
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {selectedVehicleDetails.map((unit, index) => (
-                      <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {index + 1}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {unit.motorNo}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {unit.chassisNo}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {unit.batteryNo}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {unit.controllerNo}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {unit.color}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                            unit.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {unit.status === 'available' ? 'Available' : 'Sold'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <button
-                            onClick={() => handleSellUnit(unit)}
-                            className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
-                            disabled={unit.status !== 'available'}
-                          >
-                            Sell
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+          {/* Vehicle Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredVehicles.length > 0 ? (
+              filteredVehicles.map(vehicle => 
+                searchQuery ? renderSearchResultCard(vehicle) : renderVehicleCard(vehicle)
+              )
             ) : (
-              <div className="bg-white rounded-lg shadow-md p-6 border border-blue-200">
-                <h3 className="text-xl font-bold mb-4">Chassis Number: {selectedVehicleDetails.chassisNo}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-gray-600">Motor Number:</p>
-                    <p className="font-semibold">{selectedVehicleDetails.motorNo}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Battery Number:</p>
-                    <p className="font-semibold">{selectedVehicleDetails.batteryNo}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Controller Number:</p>
-                    <p className="font-semibold">{selectedVehicleDetails.controllerNo}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Color:</p>
-                    <p className="font-semibold">{selectedVehicleDetails.color}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Status:</p>
-                    <p className={`font-semibold ${
-                      selectedVehicleDetails.status === 'available' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {selectedVehicleDetails.status === 'available' ? 'Available' : 'Sold'}
-                    </p>
-                  </div>
-                </div>
+              <div className="col-span-full flex flex-col items-center justify-center p-12 bg-white rounded-lg shadow">
+                <AlertCircle size={64} className="text-yellow-500 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">No vehicles found</h3>
+                <p className="text-gray-600 text-center">
+                  {searchQuery 
+                    ? "No results match your search criteria. Try different keywords or filters."
+                    : showSoldVehicles 
+                      ? "No sold vehicles in the inventory yet."
+                      : "Add your first vehicle to get started."
+                  }
+                </p>
               </div>
             )}
           </div>
-        ) : (
-          <>
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-              <h2 className="text-2xl font-bold text-blue-700 mb-4">
-                {isEditing ? 'Edit Scooter' : 'Add New Scooter'}
-              </h2>
-              <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-gray-700 mb-2">Scooter Name*</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  {/* <div>
-                    <label className="block text-gray-700 mb-2">Mo*</label>
-                    <input
-                      type="text"
-                      name="model"
-                      value={formData.model}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div> */}
-
-                  <div>
-                    <label className="block text-gray-700 mb-2">Quantity*</label>
-                    <input
-                      type="number"
-                      name="quantity"
-                      value={formData.quantity}
-                      onChange={handleInputChange}
-                      min="0"
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-700 mb-2">Price (₹)*</label>
-                    <input
-                      type="text"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleInputChange}
-                      placeholder="Enter price"
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-gray-700 mb-2">Engine Capacity</label>
-                    <input
-                      type="text"
-                      name="engineCapacity"
-                      value={formData.engineCapacity}
-                      onChange={handleInputChange}
-                      placeholder="e.g. 250cc"
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div className="md:col-span-3">
-                    <label className="block text-gray-700 mb-2">Specifications</label>
-                    <textarea
-                      name="specifications"
-                      value={formData.specifications}
-                      onChange={handleInputChange}
-                      rows="3"
-                      className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter specifications details"
-                    ></textarea>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="px-4 py-2 mr-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    {isEditing ? 'Update Scooter' : 'Add Scooter'}
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-                <h2 className="text-2xl font-bold text-blue-700 mb-4 md:mb-0">
-                  Scooter Inventory
-                </h2>
-                
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="relative">
-                    <select
-                      value={searchFilter}
-                      onChange={(e) => setSearchFilter(e.target.value)}
-                      className="appearance-none bg-white border border-gray-300 rounded-md pl-3 pr-8 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="name">Search by Name</option>
-                      <option value="model">Search by Model</option>
-                      <option value="chassisNo">Search by Chassis No</option>
-                      <option value="all">Search All Fields</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                      </svg>
-                    </div>
-                  </div>
-                  
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search..."
-                      value={searchQuery}
-                      onChange={handleSearch}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-                  </div>
-                  
-                  <button
-                    onClick={() => setShowSoldVehicles(!showSoldVehicles)}
-                    className={`px-4 py-2 rounded-md flex items-center gap-2 ${
-                      showSoldVehicles 
-                        ? 'bg-green-100 text-green-800 hover:bg-green-200' 
-                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                    }`}
-                  >
-                    <Archive size={16} />
-                    {showSoldVehicles ? 'Show Available' : 'Show Sold'}
-                  </button>
-                </div>
-              </div>
-
-              {filteredVehicles.length === 0 ? (
-                <div className="text-center py-10">
-                  <AlertCircle className="mx-auto text-gray-400" size={48} />
-                  <h3 className="mt-4 text-lg font-medium text-gray-900">
-                    No vehicles found
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {searchQuery.trim() === '' 
-                      ? 'No vehicles in inventory yet.' 
-                      : 'No vehicles match your search criteria.'}
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  {filteredVehicles.map(vehicle => {
-    return searchQuery.trim() === '' 
-      ? renderVehicleCard(vehicle) 
-      : renderSearchResultCard(vehicle);
-  })}
-</div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+        </>
+      )}
     </div>
-  );
+  </div>
+);
 };
 
 export default Vehicle;
