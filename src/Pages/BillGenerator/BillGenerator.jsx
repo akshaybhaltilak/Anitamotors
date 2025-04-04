@@ -15,12 +15,12 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
     const [searchTerm, setSearchTerm] = useState('');
     const [searchCategory, setSearchCategory] = useState('customerName');
     const [showHistory, setShowHistory] = useState(false);
-    const [billFormat, setBillFormat] = useState('normal'); // 'normal' or 'bajaj'
+    const [billFormat, setBillFormat] = useState('standard'); // 'standard' or 'bajaj'
 
-    // Add this function to toggle between bill formats
     const toggleBillFormat = (format) => {
         setBillFormat(format);
     };
+
     const billRef = useRef();
 
     // Load saved bills from localStorage on component mount
@@ -67,18 +67,10 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
         }
     }, [savedBills]);
 
-    // Calculate total amount and taxes
-    // Modified calculation to extract GST from the selling price, which already includes GST
     const calculateAmounts = () => {
         const grossPriceWithGST = (billData.sellingPrice || 0) * (billData.quantity || 0);
-        
-        // GST rate (5%)
         const gstRate = 0.05;
-        
-        // Calculate base price (price without GST)
         const basePrice = grossPriceWithGST / (1 + gstRate);
-        
-        // Calculate CGST (2.5%) and SGST (2.5%)
         const totalTax = grossPriceWithGST - basePrice;
         const cgst = totalTax / 2;
         const sgst = totalTax / 2;
@@ -94,15 +86,12 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
 
     const { basePrice, cgst, sgst, finalAmount } = calculateAmounts();
 
-    // Convert number to words
     const numberToWords = (num) => {
         if (num === 0) return 'Zero Rupees Only';
 
-        // Arrays for number names
         const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
         const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
-        // Function to convert numbers less than 1000
         const convertLessThanOneThousand = (num) => {
             if (num < 20) {
                 return ones[num];
@@ -114,11 +103,9 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
             return tens[ten] + (one !== 0 ? ' ' + ones[one] : '');
         };
 
-        // Split number into rupees and paise
-        let remaining = Math.floor(num); // Use a separate variable for remaining amount
+        let remaining = Math.floor(num);
         const paise = Math.round((num - remaining) * 100);
 
-        // Convert rupees part
         let result = '';
 
         if (remaining >= 10000000) {
@@ -149,7 +136,6 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
             result += convertLessThanOneThousand(remaining);
         }
 
-        // Handle paise part
         if (paise > 0) {
             return result + ' Rupees and ' + convertLessThanOneThousand(paise) + ' Paise Only';
         } else {
@@ -157,7 +143,6 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
         }
     };
 
-    // Handle input changes for bill data
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setBillData({
@@ -168,20 +153,17 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
         });
     };
 
-    // Handle print functionality
     const handlePrint = useReactToPrint({
         content: () => billRef.current,
         documentTitle: `Invoice-${billData.billNumber}`,
     });
 
-    // Save bill as PDF to localStorage
     const saveBillToLocalStorage = (bill) => {
         const updatedBills = [...savedBills, bill];
         localStorage.setItem('savedBills', JSON.stringify(updatedBills));
         setSavedBills(updatedBills);
     };
 
-    // Handle save and print
     const handleSaveAndPrint = () => {
         if (!billData.customerName.trim()) {
             alert('Customer name is required');
@@ -193,7 +175,6 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
             return;
         }
 
-        // Validate quantity
         if (billData.quantity <= 0 || billData.quantity > vehicle.quantity) {
             alert(`Invalid quantity. Available: ${vehicle.quantity}`);
             return;
@@ -212,24 +193,19 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
         saveBillToLocalStorage(billToSave);
         onCompleteSale(billToSave);
 
-        // Set to preview mode
         setEditMode(false);
 
-        // Automatically trigger print after a brief delay to ensure the DOM is updated
         setTimeout(() => {
             handlePrint();
         }, 500);
     };
 
-    // Search functionality
     const filteredBills = savedBills.filter(bill => {
         if (!searchTerm) return false;
-
         const searchValue = bill[searchCategory]?.toString().toLowerCase() || '';
         return searchValue.includes(searchTerm.toLowerCase());
     });
 
-    // Delete a saved bill
     const handleDeleteBill = (billNumber) => {
         if (window.confirm('Are you sure you want to delete this bill?')) {
             const updatedBills = savedBills.filter(bill => bill.billNumber !== billNumber);
@@ -238,20 +214,17 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
         }
     };
 
-    // Edit a saved bill
     const handleEditBill = (bill) => {
         setBillData(bill);
         setEditMode(true);
     };
 
-    // Get next service date
     const getServiceDate = (months) => {
         const date = billData.date ? new Date(billData.date) : new Date();
         date.setMonth(date.getMonth() + months);
         return date.toLocaleDateString('en-IN');
     };
 
-    // Generate PDF document for download
     const MyDocument = () => (
         <Document>
             <Page size="A4" style={styles.page}>
@@ -268,7 +241,6 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                     </View>
                     <View style={styles.logoSection}>
                         {/* Logo would go here in actual implementation */}
-                        {/* <Image style={styles.logo} src="/logo.png" /> */}
                     </View>
                 </View>
 
@@ -335,7 +307,6 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                         <Text style={[styles.tableCell, { width: '10%', textAlign: 'center' }]}>{billData.quantity}</Text>
                         <Text style={[styles.tableCell, { width: '15%', textAlign: 'right' }]}>{basePrice.toFixed(2)}</Text>
                     </View>
-
                 </View>
 
                 {/* Amount Calculation */}
@@ -412,6 +383,127 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
         </Document>
     );
 
+    // Bajaj PDF Document
+    const BajajDocument = () => (
+        <Document>
+            <Page size="A4" style={styles.page}>
+                {/* Bajaj-specific header */}
+                <View style={styles.companySection}>
+                    <View style={styles.companyDetails}>
+                        <Text style={styles.companyName}>ANITA MOTORS (BAJAJ DEALER)</Text>
+                        <Text style={styles.companyAddress}>
+                            Shop no 2, Rahate complex, Jawahar Nagar,{"\n"}
+                            Akola 444001, Maharashtra
+                        </Text>
+                        <Text style={styles.companyContact}>Contact: 8468857781 | Email: anitamotors@example.com</Text>
+                        <Text style={styles.gst}>GSTIN: 27CSZPR0818J1ZX | State: Maharashtra (30)</Text>
+                    </View>
+                </View>
+
+                <Text style={styles.header}>BAJAJ VEHICLE INVOICE</Text>
+
+                {/* Invoice Info - Bajaj style */}
+                <View style={styles.invoiceInfo}>
+                    <View style={styles.invoiceInfoColumn}>
+                        <View style={styles.invoiceInfoRow}>
+                            <Text style={styles.invoiceLabel}>Invoice No:</Text>
+                            <Text style={styles.invoiceValue}>{billData.billNumber}</Text>
+                        </View>
+                        <View style={styles.invoiceInfoRow}>
+                            <Text style={styles.invoiceLabel}>Date:</Text>
+                            <Text style={styles.invoiceValue}>{new Date(billData.date).toLocaleDateString('en-IN')}</Text>
+                        </View>
+                    </View>
+                    <View style={styles.invoiceInfoColumn}>
+                        <View style={styles.invoiceInfoRow}>
+                            <Text style={styles.invoiceLabel}>Chassis No:</Text>
+                            <Text style={styles.invoiceValue}>{billData.chassisNo}</Text>
+                        </View>
+                        <View style={styles.invoiceInfoRow}>
+                            <Text style={styles.invoiceLabel}>Engine No:</Text>
+                            <Text style={styles.invoiceValue}>{billData.motorNo}</Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Customer Details - Bajaj style */}
+                <View style={styles.detailsSection}>
+                    <View style={styles.detailsColumn}>
+                        <Text style={styles.sectionTitle}>CUSTOMER DETAILS:</Text>
+                        <Text style={styles.customerName}>{billData.customerName}</Text>
+                        <Text style={styles.detailText}>Contact: {billData.customerContact || '-'}</Text>
+                        <Text style={styles.detailText}>Address: {billData.customerAddress || '-'}</Text>
+                    </View>
+                </View>
+
+                {/* Vehicle Details - Bajaj style */}
+                <View style={styles.detailsSection}>
+                    <View style={styles.detailsColumn}>
+                        <Text style={styles.sectionTitle}>VEHICLE DETAILS:</Text>
+                        <Text style={styles.detailText}>
+                            <Text style={styles.highlight}>{vehicle.name} {vehicle.model}</Text>
+                        </Text>
+                        <Text style={styles.detailText}>Color: {vehicle.color || 'N/A'}</Text>
+                        <Text style={styles.detailText}>Variant: {vehicle.variant || 'Standard'}</Text>
+                    </View>
+                </View>
+
+                {/* Pricing Details - Bajaj style */}
+                <View style={styles.amountSection}>
+                    <View style={styles.amountRow}>
+                        <Text style={styles.amountLabel}>Ex-Showroom Price:</Text>
+                        <Text style={styles.amountValue}>rs {basePrice.toFixed(2)}</Text>
+                    </View>
+                    <View style={styles.amountRow}>
+                        <Text style={styles.amountLabel}>CGST (2.5%):</Text>
+                        <Text style={styles.amountValue}>rs {cgst.toFixed(2)}</Text>
+                    </View>
+                    <View style={styles.amountRow}>
+                        <Text style={styles.amountLabel}>SGST (2.5%):</Text>
+                        <Text style={styles.amountValue}>rs {sgst.toFixed(2)}</Text>
+                    </View>
+                    <View style={[styles.amountRow, styles.totalAmountRow]}>
+                        <Text style={styles.totalAmountLabel}>ON-ROAD PRICE:</Text>
+                        <Text style={styles.totalAmountValue}>rs {finalAmount.toFixed(2)}</Text>
+                    </View>
+                    <View style={styles.amountInWords}>
+                        <Text>Amount in Words: {numberToWords(finalAmount)}</Text>
+                    </View>
+                </View>
+
+                {/* Bajaj-specific terms */}
+                <View style={styles.termsSection}>
+                    <Text style={styles.sectionTitle}>BAJAJ TERMS & CONDITIONS:</Text>
+                    <View style={styles.termsColumns}>
+                        <View style={styles.termsColumn}>
+                            <Text style={styles.termItem}>• 5 years standard warranty</Text>
+                            <Text style={styles.termItem}>• Free services as per schedule</Text>
+                            <Text style={styles.termItem}>• Roadside assistance included</Text>
+                        </View>
+                        <View style={styles.termsColumn}>
+                            <Text style={styles.termItem}>• Genuine parts only</Text>
+                            <Text style={styles.termItem}>• Service at authorized centers</Text>
+                            <Text style={styles.termItem}>• Subject to Bajaj terms</Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Signatures */}
+                <View style={styles.signatureSection}>
+                    <View style={styles.signatureBox}>
+                        <Text style={styles.signatureLabel}>Customer Signature</Text>
+                        <Text style={styles.signaturePlaceholder}>_________________________</Text>
+                    </View>
+                    <View style={styles.signatureBox}>
+                        <Text style={styles.signatureLabel}>For ANITA MOTORS (BAJAJ)</Text>
+                        <Text style={styles.signaturePlaceholder}>_________________________</Text>
+                        <Text style={styles.signatureNote}>Authorized Bajaj Dealer</Text>
+                    </View>
+                </View>
+            </Page>
+        </Document>
+    );
+
     return (
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
@@ -423,12 +515,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                     >
                         {showHistory ? 'Hide History' : 'Show History'}
                     </button>
-                    <button
-                        onClick={() => setEditMode(!editMode)}
-                        className="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 text-sm"
-                    >
-                        {editMode ? 'Preview' : 'Edit'}
-                    </button>
+                    
                 </div>
             </div>
 
@@ -660,211 +747,314 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                 </div>
             ) : (
                 <div ref={billRef} className="p-4 border border-gray-200 rounded-lg bg-white">
-                    {/* Bill Header - Based on the provided PDF format */}
-                    <div className="border-b-2 border-blue-700 pb-4 mb-4">
-                        <div className="text-center mb-4">
-                            <h1 className="text-2xl font-bold">Tax Invoice</h1>
-                        </div>
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <h2 className="text-xl font-bold">ANITA MOTORS</h2>
-                                <p className="text-sm">Shop no 2, Rahate complex, Jawahar Nagar,</p>
-                                <p className="text-sm">Email: anitamotors@example.com</p>
-                                <p className="text-sm font-semibold mt-2">GSTIN: 27CSZPR0818J1ZX</p>
-                                <p className="text-sm">State: Maharashtra (30)</p>
+                    {billFormat === 'standard' ? (
+                        <>
+                            {/* Standard Format Invoice */}
+                            <div className="border-b-2 border-blue-700 pb-4 mb-4">
+                                <div className="text-center mb-4">
+                                    <h1 className="text-2xl font-bold">Tax Invoice</h1>
+                                </div>
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h2 className="text-xl font-bold">ANITA MOTORS</h2>
+                                        <p className="text-sm">Shop no 2, Rahate complex, Jawahar Nagar,</p>
+                                        <p className="text-sm">Email: anitamotors@example.com</p>
+                                        <p className="text-sm font-semibold mt-2">GSTIN: 27CSZPR0818J1ZX</p>
+                                        <p className="text-sm">State: Maharashtra (30)</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-semibold">Invoice #: {billData.billNumber}</p>
+                                        <p>Date: {new Date(billData.date).toLocaleDateString('en-IN')}</p>
+                                        <p>Payment: {billData.paymentMode || "Cash"}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="text-right">
-                                <p className="font-semibold">Invoice #: {billData.billNumber}</p>
-                                <p>Date: {new Date(billData.date).toLocaleDateString('en-IN')}</p>
-                                <p>Payment: {billData.paymentMode || "Cash"}</p>
+
+                            {/* Customer & Vehicle Details */}
+                            <div className="flex flex-wrap justify-between mb-4">
+                                <div className="w-full md:w-1/2 mb-4 md:mb-0">
+                                    <h3 className="font-bold mb-2">BILL TO:</h3>
+                                    <p className="font-semibold">{billData.customerName}</p>
+                                    <p>Contact: {billData.customerContact || '-'}</p>
+                                    <p>Address: {billData.customerAddress || '-'}</p>
+                                </div>
+                                <div className="w-full md:w-1/2">
+                                    <h3 className="font-bold mb-2">VEHICLE DETAILS:</h3>
+                                    <p className="font-semibold">{vehicle.name} {vehicle.model}</p>
+                                    <p>Color: {vehicle.color || 'N/A'}</p>
+                                    <p>Motor No: {billData.motorNo}</p>
+                                    <p>Chassis No: {billData.chassisNo}</p>
+                                    {billData.batteryNo && <p>Battery No: {billData.batteryNo}</p>}
+                                    {billData.controllerNo && <p>Controller No: {billData.controllerNo}</p>}
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Customer & Vehicle Details */}
-                    <div className="flex flex-wrap justify-between mb-4">
-                        <div className="w-full md:w-1/2 mb-4 md:mb-0">
-                            <h3 className="font-bold mb-2">BILL TO:</h3>
-                            <p className="font-semibold">{billData.customerName}</p>
-                            <p>Contact: {billData.customerContact || '-'}</p>
-                            <p>Address: {billData.customerAddress || '-'}</p>
-                        </div>
-                        <div className="w-full md:w-1/2">
-                            <h3 className="font-bold mb-2">VEHICLE DETAILS:</h3>
-                            <p className="font-semibold">{vehicle.name} {vehicle.model}</p>
-                            <p>Color: {vehicle.color || 'N/A'}</p>
-                            <p>Motor No: {billData.motorNo}</p>
-                            <p>Chassis No: {billData.chassisNo}</p>
-                            {billData.batteryNo && <p>Battery No: {billData.batteryNo}</p>}
-                            {billData.controllerNo && <p>Controller No: {billData.controllerNo}</p>}
-                        </div>
-                    </div>
-
-                    {/* Items Table */}
-                    <div className="mb-4 overflow-x-auto">
-                        <table className="min-w-full border">
-                            <thead>
-                                <tr className="bg-gray-100">
-                                    <th className="p-2 border">#</th>
-                                    <th className="p-2 border">DESCRIPTION</th>
-                                    <th className="p-2 border">HSN</th>
-                                    <th className="p-2 border text-right">RATE</th>
-                                    <th className="p-2 border text-center">QTY</th>
-                                    <th className="p-2 border text-right">AMOUNT</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td className="p-2 border">1</td>
-                                    <td className="p-2 border">{vehicle.name} {vehicle.model}</td>
-                                    <td className="p-2 border">87116020</td>
-                                    <td className="p-2 border text-right">₹{(basePrice / billData.quantity).toFixed(2)}</td>
-                                    <td className="p-2 border text-center">{billData.quantity}</td>
-                                    <td className="p-2 border text-right">₹{basePrice.toFixed(2)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Amount Calculation */}
-                    <div className="flex flex-col items-end mb-4">
-                        <div className="w-full md:w-1/3">
-                            <div className="flex justify-between mb-1">
-                                <span>Subtotal:</span>
-                                <span>₹{basePrice.toFixed(2)}</span>
+                            {/* Items Table */}
+                            <div className="mb-4 overflow-x-auto">
+                                <table className="min-w-full border">
+                                    <thead>
+                                        <tr className="bg-gray-100">
+                                            <th className="p-2 border">#</th>
+                                            <th className="p-2 border">DESCRIPTION</th>
+                                            <th className="p-2 border">HSN</th>
+                                            <th className="p-2 border text-right">RATE</th>
+                                            <th className="p-2 border text-center">QTY</th>
+                                            <th className="p-2 border text-right">AMOUNT</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                            <td className="p-2 border">1</td>
+                                            <td className="p-2 border">{vehicle.name} {vehicle.model}</td>
+                                            <td className="p-2 border">87116020</td>
+                                            <td className="p-2 border text-right">{(basePrice / billData.quantity).toFixed(2)}</td>
+                                            <td className="p-2 border text-center">{billData.quantity}</td>
+                                            <td className="p-2 border text-right">{basePrice.toFixed(2)}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <div className="flex justify-between mb-1">
-                                <span>CGST (2.5%):</span>
-                                <span>₹{cgst.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between mb-1">
-                                <span>SGST (2.5%):</span>
-                                <span>₹{sgst.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between font-bold border-t pt-1">
-                                <span>TOTAL:</span>
-                                <span>₹{finalAmount.toFixed(2)}</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="mb-4">
-                        <p className="italic text-sm">Amount in Words: {numberToWords(finalAmount)}</p>
-                    </div>
-
-                    {/* Terms & Conditions */}
-                    <div className="mb-4">
-                        <h3 className="font-bold mb-2">TERMS & CONDITIONS:</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                            <div>
-                                <p>• Battery: 8+4 months warranty</p>
-                                <p>• Motor & Controller: 1 year warranty</p>
-                                <p>• No warranty for charger</p>
-                                <p>• Goods once sold will not be taken back</p>
+                            {/* Amount Calculation */}
+                            <div className="flex justify-end mb-4">
+                                <div className="w-full md:w-1/2">
+                                    <div className="flex justify-between p-2">
+                                        <p>Subtotal:</p>
+                                        <p>₹ {basePrice.toFixed(2)}</p>
+                                    </div>
+                                    <div className="flex justify-between p-2">
+                                        <p>CGST (2.5%):</p>
+                                        <p>₹ {cgst.toFixed(2)}</p>
+                                    </div>
+                                    <div className="flex justify-between p-2">
+                                        <p>SGST (2.5%):</p>
+                                        <p>₹ {sgst.toFixed(2)}</p>
+                                    </div>
+                                    <div className="flex justify-between p-2 font-bold bg-gray-100">
+                                        <p>TOTAL AMOUNT:</p>
+                                        <p>₹ {finalAmount.toFixed(2)}</p>
+                                    </div>
+                                    <div className="p-2 text-sm italic">
+                                        <p>Amount in Words: {numberToWords(finalAmount)}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <p>• Avoid overcharging batteries</p>
-                                <p>• Get battery balanced every 3 months</p>
-                                <p>• Keep batteries away from water</p>
-                                <p>• Subject to Akola jurisdiction</p>
+
+                            {/* Terms and Conditions */}
+                            <div className="mb-4">
+                                <h3 className="font-bold mb-2">TERMS & CONDITIONS:</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                    <div>
+                                        <p>• Battery: 8+4 months warranty</p>
+                                        <p>• Motor & Controller: 1 year warranty</p>
+                                        <p>• No warranty for charger</p>
+                                        <p>• Goods once sold will not be taken back</p>
+                                    </div>
+                                    <div>
+                                        <p>• Avoid overcharging batteries</p>
+                                        <p>• Get battery balanced every 3 months</p>
+                                        <p>• Keep batteries away from water</p>
+                                        <p>• Subject to Akola jurisdiction</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Service Schedule */}
-                    <div className="mb-8">
-                        <h3 className="font-bold mb-2">SERVICE SCHEDULE:</h3>
-                        <p className="text-sm">1. First free service: 500 KM or 2 months (<span className="font-semibold">{getServiceDate(2)}</span>)</p>
-                        <p className="text-sm">2. Second free service: 2000 KM or 4 months (<span className="font-semibold">{getServiceDate(4)}</span>)</p>
-                        <p className="text-sm">3. Third service: 4000 KM or 6 months (<span className="font-semibold">{getServiceDate(6)}</span>)</p>
-                    </div>
+                            {/* Service Schedule */}
+                            <div className="mb-4">
+                                <h3 className="font-bold mb-2">SERVICE SCHEDULE:</h3>
+                                <p>1. First free service: 500 KM or 2 months ({getServiceDate(2)})</p>
+                                <p>2. Second free service: 2000 KM or 4 months ({getServiceDate(4)})</p>
+                                <p>3. Third service: 4000 KM or 6 months ({getServiceDate(6)})</p>
+                            </div>
 
-                    {/* Signatures */}
-                    <div className="flex justify-between mb-6">
-                        <div className="text-center">
-                            <p>_________________________</p>
-                            <p className="mt-1 text-sm">Customer Signature</p>
-                        </div>
-                        <div className="text-center">
-                            <p>_________________________</p>
-                            <p className="mt-1 text-sm">For ANITA MOTORS</p>
-                            <p className="text-xs">Authorized Signatory</p>
-                        </div>
-                    </div>
+                            {/* Signatures */}
+                            <div className="flex justify-between mb-4 mt-8">
+                                <div className="text-center">
+                                    <p className="border-t border-black pt-1">Customer Signature</p>
+                                </div>
+                                <div className="text-center">
+                                    <p className="border-t border-black pt-1">For ANITA MOTORS</p>
+                                    <p className="text-sm">Authorized Signatory</p>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            {/* Bajaj Format Invoice */}
+                            <div className="border-b-2 border-blue-700 pb-4 mb-4">
+                                <div className="text-center mb-4">
+                                    <h1 className="text-2xl font-bold">BAJAJ VEHICLE INVOICE</h1>
+                                </div>
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h2 className="text-xl font-bold">ANITA MOTORS (BAJAJ DEALER)</h2>
+                                        <p className="text-sm">Shop no 2, Rahate complex, Jawahar Nagar,</p>
+                                        <p className="text-sm">Email: anitamotors@example.com</p>
+                                        <p className="text-sm font-semibold mt-2">GSTIN: 27CSZPR0818J1ZX</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-semibold">Invoice #: {billData.billNumber}</p>
+                                        <p>Date: {new Date(billData.date).toLocaleDateString('en-IN')}</p>
+                                        {/* <p>Chassis No: {billData.chassisNo}</p>
+                                        <p>Engine No: {billData.motorNo}</p> */}
+                                    </div>
+                                </div>
+                            </div>
 
-                    {/* Footer */}
-                    <div className="text-center text-sm border-t pt-4 mt-4">
-                        <p>Thank you for your business!</p>
-                        <div className="border-b my-2"></div>
-                        <p>ANITA MOTORS | 8468857781 | anitamotors@example.com</p>
-                        <p className="text-xs italic mt-2">This is a computer generated invoice. No signature required.</p>
-                    </div>
+                            {/* Customer Details - Bajaj Style */}
+                            <div className="mb-4">
+                                <h3 className="font-bold mb-2">CUSTOMER DETAILS:</h3>
+                                <p className="font-semibold">{billData.customerName}</p>
+                                <p>Contact: {billData.customerContact || '-'}</p>
+                                <p>Address: {billData.customerAddress || '-'}</p>
+                            </div>
+
+                            {/* Vehicle Details - Bajaj Style */}
+                            <div className="mb-4">
+                                <h3 className="font-bold mb-2">VEHICLE DETAILS:</h3>
+                                <p className="font-semibold">{vehicle.name} {vehicle.model}</p>
+                                <p>Color: {vehicle.color || 'N/A'}</p>
+                                <p>Variant: {vehicle.variant || 'Standard'}</p>
+                            </div>
+
+                            {/* Pricing Details - Bajaj Style */}
+                            <div className="flex justify-end mb-4">
+                                <div className="w-full md:w-1/2">
+                                    <div className="flex justify-between p-2">
+                                        <p>Ex-Showroom Price:</p>
+                                        <p>₹ {basePrice.toFixed(2)}</p>
+                                    </div>
+                                    <div className="flex justify-between p-2">
+                                        <p>CGST (2.5%):</p>
+                                        <p>₹ {cgst.toFixed(2)}</p>
+                                    </div>
+                                    <div className="flex justify-between p-2">
+                                        <p>SGST (2.5%):</p>
+                                        <p>₹ {sgst.toFixed(2)}</p>
+                                    </div>
+                                    <div className="flex justify-between p-2 font-bold bg-gray-100">
+                                        <p>ON-ROAD PRICE:</p>
+                                        <p>₹ {finalAmount.toFixed(2)}</p>
+                                    </div>
+                                    <div className="p-2 text-sm italic">
+                                        <p>Amount in Words: {numberToWords(finalAmount)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Bajaj-specific Terms */}
+                            <div className="mb-4">
+                                <h3 className="font-bold mb-2">BAJAJ TERMS & CONDITIONS:</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                                    <div>
+                                        <p>• 5 years standard warranty</p>
+                                        <p>• Free services as per schedule</p>
+                                        <p>• Roadside assistance included</p>
+                                    </div>
+                                    <div>
+                                        <p>• Genuine parts only</p>
+                                        <p>• Service at authorized centers</p>
+                                        <p>• Subject to Bajaj terms</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Signatures - Bajaj Style */}
+                            <div className="flex justify-between mb-4 mt-8">
+                                <div className="text-center">
+                                    <p className="border-t border-black pt-1">Customer Signature</p>
+                                </div>
+                                <div className="text-center">
+                                    <p className="border-t border-black pt-1">For ANITA MOTORS (BAJAJ)</p>
+                                    <p className="text-sm">Authorized Bajaj Dealer</p>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
 
-            {/* Bill Format Toggle */}
-            <div className="flex justify-center my-4">
-                <div className="inline-flex rounded-md shadow-sm" role="group">
-                    <button
-                        onClick={() => toggleBillFormat('normal')}
-                        className={`px-4 py-2 text-sm font-medium border ${billFormat === 'normal' ? 'bg-blue-700 text-white' : 'bg-white text-blue-700'} rounded-l-md`}
-                    >
+            {/* Bill Format Selection */}
+            <div className="mb-6 mt-4">
+                <h3 className="font-semibold mb-2">Bill Format:</h3>
+                <div className="flex gap-4">
+                    <label className="flex items-center">
+                        <input
+                            type="radio"
+                            name="billFormat"
+                            checked={billFormat === 'standard'}
+                            onChange={() => toggleBillFormat('standard')}
+                            className="mr-2"
+                        />
                         Standard Format
-                    </button>
-                    <button
-                        onClick={() => toggleBillFormat('bajaj')}
-                        className={`px-4 py-2 text-sm font-medium border ${billFormat === 'bajaj' ? 'bg-blue-700 text-white' : 'bg-white text-blue-700'} rounded-r-md`}
-                    >
+                    </label>
+                    <label className="flex items-center">
+                        <input
+                            type="radio"
+                            name="billFormat"
+                            checked={billFormat === 'bajaj'}
+                            onChange={() => toggleBillFormat('bajaj')}
+                            className="mr-2"
+                        />
                         Bajaj Format
-                    </button>
+                    </label>
                 </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex justify-between mt-4">
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-4 mt-8">
+                <button
+                    onClick={handleSaveAndPrint}
+                    className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center justify-center"
+                >
+                    <span className="mr-2">💾</span> Save
+                </button>
+                <button
+                        onClick={() => setEditMode(!editMode)}
+                        className="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 text-sm"
+                    >
+                        {editMode ? 'Preview' : 'Edit'}
+                    </button>
                 <button
                     onClick={onCancel}
-                    className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                    className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center justify-center"
                 >
-                    Cancel
+                    <span className="mr-2">❌</span> Cancel
                 </button>
-                <div className="flex gap-2">
-                    {!editMode && (
-                        <PDFDownloadLink
-                            document={<MyDocument />}
-                            fileName={`Invoice-${billData.billNumber}.pdf`}
-                            className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
-                        >
-                            {({ loading }) => (loading ? 'Loading PDF...' : 'Download PDF')}
-                        </PDFDownloadLink>
-                    )}
-                    <button
-                        onClick={handlePrint}
-                        className="px-6 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
-                    >
-                        Print
-                    </button>
-                    <button
-                        onClick={handleSaveAndPrint}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                        Save & Print
-                    </button>
-                </div>
+                
+                
+                {!editMode && (
+    <PDFDownloadLink
+        document={billFormat === 'standard' ? <MyDocument /> : <BajajDocument />}
+        fileName={`Invoice-${billData.billNumber}-${billFormat === 'standard' ? 'Standard' : 'Bajaj'}.pdf`}
+        className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2 transition-colors"
+    >
+        {({ loading }) => (
+            <>
+                {loading ? (
+                    <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Generating PDF...
+                    </>
+                ) : (
+                    <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                        Download {billFormat === 'standard' ? 'Standard' : 'Bajaj'} PDF
+                    </>
+                )}
+            </>
+        )}
+    </PDFDownloadLink>
+)}
             </div>
-
-            {/* PDF Styles */}
-            {!editMode && (
-                <div style={{ display: 'none' }}>
-                    {/* PDF Stylesheet - this would be used by @react-pdf/renderer */}
-                    {/* This is rendered outside the visible area */}
-                </div>
-            )}
         </div>
     );
 };
-
-
 // PDF styles
 const styles = StyleSheet.create({
     page: {
