@@ -21,12 +21,8 @@ export default function SparePartsManagement() {
   const [currentPart, setCurrentPart] = useState({
     id: null,
     name: '',
-    partNumber: '',
     quantity: 0,
     price: 0,
-    category: '',
-    manufacturer: '',
-    location: '',
     minStockLevel: 5,
     image: ''
   });
@@ -127,11 +123,8 @@ export default function SparePartsManagement() {
     setCurrentPart({
       id: null,
       name: '',
-      partNumber: '',
       quantity: 0,
       price: 0,
-      category: '',
-      manufacturer: '',
       location: '',
       minStockLevel: 5,
       image: ''
@@ -151,7 +144,7 @@ export default function SparePartsManagement() {
 
   // Save part (add or update)
   const handleSavePart = () => {
-    if (!currentPart.name || !currentPart.partNumber) {
+    if (!currentPart.name ) {
       setError('Name and Part Number are required.');
       return;
     }
@@ -162,11 +155,8 @@ export default function SparePartsManagement() {
         const partRef = ref(database, `spareParts/${currentPart.id}`);
         update(partRef, {
           name: currentPart.name,
-          partNumber: currentPart.partNumber,
           quantity: currentPart.quantity,
           price: currentPart.price,
-          category: currentPart.category,
-          manufacturer: currentPart.manufacturer,
           location: currentPart.location,
           minStockLevel: currentPart.minStockLevel,
           image: currentPart.image,
@@ -178,11 +168,9 @@ export default function SparePartsManagement() {
         const partsRef = ref(database, 'spareParts');
         push(partsRef, {
           name: currentPart.name,
-          partNumber: currentPart.partNumber,
           quantity: currentPart.quantity,
           price: currentPart.price,
-          category: currentPart.category,
-          manufacturer: currentPart.manufacturer,
+
           location: currentPart.location,
           minStockLevel: currentPart.minStockLevel,
           image: currentPart.image,
@@ -256,7 +244,6 @@ export default function SparePartsManagement() {
       push(transactionsRef, {
         partId: transactionData.partId,
         partName: selectedPart.name,
-        partNumber: selectedPart.partNumber,
         quantity: transactionData.quantity,
         type: transactionData.type,
         notes: transactionData.notes,
@@ -285,17 +272,13 @@ export default function SparePartsManagement() {
 
   // Export data to CSV
   const exportToCSV = () => {
-    const headers = ['Name', 'Part Number', 'Quantity', 'Price', 'Category', 'Manufacturer', 'Location'];
+    const headers = ['Name', 'Quantity', 'Price',  'Location'];
     const csvContent = [
       headers.join(','),
       ...filteredParts.map(part => [
         `"${part.name}"`,
-        `"${part.partNumber}"`,
         part.quantity,
         part.price,
-        `"${part.category || ''}"`,
-        `"${part.manufacturer || ''}"`,
-        `"${part.location || ''}"`
       ].join(','))
     ].join('\n');
     
@@ -329,7 +312,7 @@ export default function SparePartsManagement() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700">Part Name*</label>
+            <label className="block text-sm font-medium text-gray-700">Part Name</label>
             <input
               type="text"
               name="name"
@@ -398,7 +381,7 @@ export default function SparePartsManagement() {
             <input
               type="number"
               min="0"
-              step="0.01"
+              step="1"
               name="price"
               value={currentPart.price}
               onChange={handlePartInputChange}
@@ -406,7 +389,7 @@ export default function SparePartsManagement() {
             />
           </div>
           
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-gray-700">Manufacturer</label>
             <input
               type="text"
@@ -416,7 +399,7 @@ export default function SparePartsManagement() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50 p-2 border"
             />
           </div>
-          
+           */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Storage Location</label>
             <input
@@ -438,8 +421,8 @@ export default function SparePartsManagement() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 bg-gray-50 p-2 border"
               placeholder="https://example.com/image.jpg"
             />
-          </div>
-           */}
+          </div> */}
+          
           <div className="md:col-span-2 mt-4">
             <button
               onClick={handleSavePart}

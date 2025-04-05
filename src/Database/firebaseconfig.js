@@ -3,13 +3,14 @@ import { getDatabase } from 'firebase/database';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyALaIOhUCvD6SNsTdiAly1c_7WrQBcwDiU",
-    authDomain: "anitamotors-5f061.firebaseapp.com",
-    projectId: "anitamotors-5f061",
-    storageBucket: "anitamotors-5f061.firebasestorage.app",
-    messagingSenderId: "1039981654791",
-    appId: "1:1039981654791:web:2d03e619aaedf51957cba2",
-    databaseURL: "https://anitamotors-5f061-default-rtdb.firebaseio.com/"
+    apiKey: "AIzaSyATg9skGDHq-SgF05fX_-F_TVCm5k9d_Eo",
+  authDomain: "anitamotors-2e65e.firebaseapp.com",
+  projectId: "anitamotors-2e65e",
+  storageBucket: "anitamotors-2e65e.firebasestorage.app",
+  messagingSenderId: "510644075709",
+  appId: "1:510644075709:web:325abd261ba7a9ac2b0bd4",
+  measurementId: "G-69DZLQ3PCQ",
+    databaseURL: "https://anitamotors-2e65e-default-rtdb.firebaseio.com/"
 };
 
 // Initialize Firebase
