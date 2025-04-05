@@ -362,19 +362,19 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                     <View style={styles.calculationSection}>
                         <View style={styles.calcRow}>
                             <Text style={styles.calcLabel}>Subtotal:</Text>
-                            <Text style={styles.calcValue}>₹ {(basePrice || 50000).toFixed(2)}</Text>
+                            <Text style={styles.calcValue}>{(basePrice || 50000).toFixed(2)}</Text>
                         </View>
                         <View style={styles.calcRow}>
                             <Text style={styles.calcLabel}>CGST (2.5%):</Text>
-                            <Text style={styles.calcValue}>₹ {(cgst || 1250).toFixed(2)}</Text>
+                            <Text style={styles.calcValue}>{(cgst || 1250).toFixed(2)}</Text>
                         </View>
                         <View style={styles.calcRow}>
                             <Text style={styles.calcLabel}>SGST (2.5%):</Text>
-                            <Text style={styles.calcValue}>₹ {(sgst || 1250).toFixed(2)}</Text>
+                            <Text style={styles.calcValue}>{(sgst || 1250).toFixed(2)}</Text>
                         </View>
                         <View style={styles.totalRow}>
                             <Text style={styles.totalLabel}>TOTAL AMOUNT:</Text>
-                            <Text style={styles.totalValue}>₹ {(finalAmount || 52500).toFixed(2)}</Text>
+                            <Text style={styles.totalValue}>{(finalAmount || 52500).toFixed(2)}</Text>
                         </View>
                     </View>
                     <View style={styles.amountInWords}>
@@ -395,12 +395,27 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                     </View>
                 </View>
 
+                {/* akshay  */}
+                <View style={styles.termsSection}>
+                    <View style={styles.termsColumns}>
+                        <View style={styles.termsColumn}>
+                            <Text style={styles.termItem}>• Battery should not be over charged, if it is seen that the battery is bulging then the warranty will be terminated.</Text>
+                            <Text style={styles.termItem}>• Get all the batteries balanced by rotating in every 3 months from your nearest dealer.</Text>
+                            <Text style={styles.termItem}>• Keep the batteries away from water. Do not wash batteries. Batteries are sealed do not attempt to add acid.</Text>
+                        </View>
+                        <View style={styles.termsColumn}>
+                            <Text style={styles.termItem}>• Do not accelerate and brake abruptly. Do not over load the scooter. Keep batteries cool. Charge under shade</Text>
+                            <Text style={styles.termItem}>• Once a month, Discharge battery fully and Charge battery fully. Charge after at-least 30 minutes of a long drive</Text>
+                        </View>
+                    </View>
+                </View>
+
                 {/* Terms and Service Schedule in Columns */}
                 <View style={styles.infoColumns}>
                     {/* Terms & Conditions */}
                     <View style={styles.termsContainer}>
                         <View style={styles.boxHeader}>
-                            <Text style={styles.boxTitle}>TERMS & CONDITIONS:</Text>
+                            <Text style={styles.boxTitle}>PRECAUTION</Text>
                         </View>
                         <View style={styles.termsContent}>
                             <View style={styles.termItem}>
@@ -483,132 +498,234 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
     const BajajDocument = () => (
         <Document>
             <Page size="A4" style={styles.page}>
-                {/* Bajaj-specific header */}
-                <View style={styles.companySection}>
-                    <View style={styles.companyDetails}>
-                        <Text style={styles.companyName}>ANITA MOTORS (BAJAJ DEALER)</Text>
-                        <Text style={styles.companyAddress}>
-                            Shop no 2, Rahate complex, Jawahar Nagar,{"\n"}
-                            Akola 444001, Maharashtra
-                        </Text>
-                        <Text style={styles.companyContact}>Contact: 8468857781 | Email: anitamotors@example.com</Text>
-                        <Text style={styles.gst}>GSTIN: 27CSZPR0818J1ZX | State: Maharashtra (30)</Text>
-                    </View>
-                </View>
-
-                <Text style={styles.header}>BAJAJ VEHICLE INVOICE</Text>
-
-                {/* Invoice Info - Bajaj style */}
-                <View style={styles.invoiceInfo}>
-                    <View style={styles.invoiceInfoColumn}>
-                        <View style={styles.invoiceInfoRow}>
-                            <Text style={styles.invoiceLabel}>Invoice No:</Text>
-                            <Text style={styles.invoiceValue}>{billData.billNumber}</Text>
+                {/* Header Section */}
+                <View style={styles.header}>
+                    <View style={styles.headerContent}>
+                        <View style={styles.headerLeft}>
+                            <Text style={styles.companyName}>ANITA MOTORS (BAJAJ DEALER)</Text>
+                            <Text style={styles.companyAddress}>
+                                Shop no 2, Rahate complex, Jawahar Nagar,{"\n"}
+                                Akola 444001, Maharashtra
+                            </Text>
+                            <Text style={styles.companyContact}>Contact: 8468857781 | Email: anitamotors@example.com</Text>
+                            <Text style={styles.gstInfo}>GSTIN: 27CSZPR0818J1ZX | State: Maharashtra (30)</Text>
                         </View>
-                        <View style={styles.invoiceInfoRow}>
-                            <Text style={styles.invoiceLabel}>Date:</Text>
-                            <Text style={styles.invoiceValue}>{new Date(billData.date).toLocaleDateString('en-IN')}</Text>
+                        <View style={styles.headerRight}>
+                            <View style={styles.logoBox}>
+                                <Text style={styles.logoText}>BAJAJ</Text>
+                            </View>
                         </View>
                     </View>
                 </View>
 
-                {/* Customer Details - Bajaj style */}
-                <View style={styles.detailsSection}>
-                    <View style={styles.detailsColumn}>
-                        <Text style={styles.sectionTitle}>CUSTOMER DETAILS:</Text>
-                        <Text style={styles.customerName}>{billData.customerName}</Text>
-                        <Text style={styles.detailText}>Contact: {billData.customerContact || '-'}</Text>
-                        <Text style={styles.detailText}>Address: {billData.customerAddress || '-'}</Text>
+                {/* Title Section */}
+                <View style={styles.titleContainer}>
+                    <View style={styles.titleLine} />
+                    <Text style={styles.invoiceTitle}>BAJAJ VEHICLE INVOICE</Text>
+                    <View style={styles.titleLine} />
+                </View>
+
+                {/* Info Row - Invoice details and customer info */}
+                <View style={styles.infoRow}>
+                    {/* Invoice Info Section */}
+                    <View style={styles.infoSection}>
+                        <View style={styles.infoItem}>
+                            <Text style={styles.infoLabel}>Invoice No:</Text>
+                            <Text style={styles.infoValue}>{billData.billNumber}</Text>
+                        </View>
+                        <View style={styles.infoItem}>
+                            <Text style={styles.infoLabel}>Date:</Text>
+                            <Text style={styles.infoValue}>{new Date(billData.date).toLocaleDateString('en-IN')}</Text>
+                        </View>
+                    </View>
+
+                    {/* Customer Section */}
+                    <View style={styles.customerSection}>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>CUSTOMER DETAILS</Text>
+                        </View>
+                        <View style={styles.sectionContent}>
+                            <Text style={styles.customerName}>{billData.customerName}</Text>
+                            <Text style={styles.detailText}>Contact: {billData.customerContact || '-'}</Text>
+                            <Text style={styles.detailText}>Address: {billData.customerAddress || '-'}</Text>
+                        </View>
                     </View>
                 </View>
 
-                {/* Vehicle Details - Bajaj style */}
-                <View style={styles.detailsSection}>
-                    <View style={styles.detailsColumn}>
-                        <Text style={styles.sectionTitle}>VEHICLE DETAILS:</Text>
-                        <Text style={styles.detailText}>
-                            <Text style={styles.highlight}>{vehicle.name} {vehicle.model}</Text>
-                        </Text>
-                        <Text style={styles.detailText}>Color: {vehicle.color || 'N/A'}</Text>
-                        <Text style={styles.detailText}>Variant: {vehicle.variant || 'Standard'}</Text>
+                {/* Vehicle Section */}
+                <View style={styles.vehicleSection}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>VEHICLE DETAILS</Text>
+                    </View>
+                    <View style={styles.vehicleDetailsGrid}>
+                        <View style={styles.vehicleNameRow}>
+                            <Text style={styles.vehicleName}>{vehicle.name} {vehicle.model}</Text>
+                            <Text style={styles.vehicleColor}>Color: {vehicle.color || 'N/A'}</Text>
+                        </View>
+                        <View style={styles.vehicleDetailsRow}>
+                            <View style={styles.vehicleDetailItem}>
+                                <Text style={styles.vehicleDetailLabel}>Variant:</Text>
+                                <Text style={styles.vehicleDetailValue}>{vehicle.variant || 'Standard'}</Text>
+                            </View>
+                        </View>
                     </View>
                 </View>
 
-                <View style={styles.table}>
-                    {/* Table Header */}
-                    <View style={styles.tableRowHeader}>
-                        <Text style={[styles.tableCell, styles.headerCell, { width: '5%' }]}>#</Text>
-                        <Text style={[styles.tableCell, styles.headerCell, { width: '50%' }]}>DESCRIPTION</Text>
-                        <Text style={[styles.tableCell, styles.headerCell, { width: '10%' }]}>HSN</Text>
-                        <Text style={[styles.tableCell, styles.headerCell, { width: '15%' }]}>RATE </Text>
-                        <Text style={[styles.tableCell, styles.headerCell, { width: '10%' }]}>QTY</Text>
-                        <Text style={[styles.tableCell, styles.headerCell, { width: '10%' }]}>AMOUNT</Text>
+                {/* Table Section */}
+                <View style={styles.tableContainer}>
+                    <View style={styles.tableHeader}>
+                        <Text style={[styles.tableHeaderCell, styles.serialNoCell]}>#</Text>
+                        <Text style={[styles.tableHeaderCell, styles.descriptionCell]}>DESCRIPTION</Text>
+                        <Text style={[styles.tableHeaderCell, styles.hsnCell]}>HSN</Text>
+                        <Text style={[styles.tableHeaderCell, styles.rateCell]}>RATE</Text>
+                        <Text style={[styles.tableHeaderCell, styles.qtyCell]}>QTY</Text>
+                        <Text style={[styles.tableHeaderCell, styles.amountCell]}>AMOUNT</Text>
                     </View>
-
-                    {/* Table Row */}
                     <View style={styles.tableRow}>
-                        <Text style={[styles.tableCell, { width: '5%' }]}>1</Text>
-                        <Text style={[styles.tableCell, { width: '50%' }]}>
+                        <Text style={[styles.tableCell, styles.serialNoCell]}>1</Text>
+                        <Text style={[styles.tableCell, styles.descriptionCell]}>
                             {vehicle.name} {vehicle.model}
                         </Text>
-                        <Text style={[styles.tableCell, { width: '10%' }]}>{hsnNumber}</Text>
-                        <Text style={[styles.tableCell, { width: '15%', textAlign: 'right' }]}>{(basePrice / billData.quantity).toFixed(2)}</Text>
-                        <Text style={[styles.tableCell, { width: '10%', textAlign: 'center' }]}>{billData.quantity}</Text>
-                        <Text style={[styles.tableCell, { width: '10%', textAlign: 'right' }]}>{basePrice.toFixed(2)}</Text>
+                        <Text style={[styles.tableCell, styles.hsnCell]}>{hsnNumber}</Text>
+                        <Text style={[styles.tableCell, styles.rateCell]}>{(basePrice / billData.quantity).toFixed(2)}</Text>
+                        <Text style={[styles.tableCell, styles.qtyCell]}>{billData.quantity}</Text>
+                        <Text style={[styles.tableCell, styles.amountCell]}>{basePrice.toFixed(2)}</Text>
                     </View>
                 </View>
 
-                {/* Pricing Details - Bajaj style */}
-                <View style={styles.amountSection}>
-                    <View style={styles.amountRow}>
-                        <Text style={styles.amountLabel}>Ex-Showroom Price:</Text>
-                        <Text style={styles.amountValue}>rs {basePrice.toFixed(2)}</Text>
-                    </View>
-                    <View style={styles.amountRow}>
-                        <Text style={styles.amountLabel}>CGST (2.5%):</Text>
-                        <Text style={styles.amountValue}>rs {cgst.toFixed(2)}</Text>
-                    </View>
-                    <View style={styles.amountRow}>
-                        <Text style={styles.amountLabel}>SGST (2.5%):</Text>
-                        <Text style={styles.amountValue}>rs {sgst.toFixed(2)}</Text>
-                    </View>
-                    <View style={[styles.amountRow, styles.totalAmountRow]}>
-                        <Text style={styles.totalAmountLabel}>ON-ROAD PRICE:</Text>
-                        <Text style={styles.totalAmountValue}>rs {finalAmount.toFixed(2)}</Text>
+                {/* Calculation Section */}
+                <View style={styles.calculationContainer}>
+                    <View style={styles.calculationSection}>
+                        <View style={styles.calcRow}>
+                            <Text style={styles.calcLabel}>Ex-Showroom Price:</Text>
+                            <Text style={styles.calcValue}>{basePrice.toFixed(2)}</Text>
+                        </View>
+                        <View style={styles.calcRow}>
+                            <Text style={styles.calcLabel}>CGST (2.5%):</Text>
+                            <Text style={styles.calcValue}>{cgst.toFixed(2)}</Text>
+                        </View>
+                        <View style={styles.calcRow}>
+                            <Text style={styles.calcLabel}>SGST (2.5%):</Text>
+                            <Text style={styles.calcValue}>{sgst.toFixed(2)}</Text>
+                        </View>
+                        <View style={styles.totalRow}>
+                            <Text style={styles.totalLabel}>ON-ROAD PRICE:</Text>
+                            <Text style={styles.totalValue}>{finalAmount.toFixed(2)}</Text>
+                        </View>
                     </View>
                     <View style={styles.amountInWords}>
-                        <Text>Amount in Words: {numberToWords(finalAmount)}</Text>
+                        <Text style={styles.amountWordsText}>Amount in Words: {numberToWords(finalAmount)}</Text>
                     </View>
                 </View>
 
-                {/* Bajaj-specific terms */}
-                <View style={styles.termsSection}>
-                    <Text style={styles.sectionTitle}>BAJAJ TERMS & CONDITIONS:</Text>
-                    <View style={styles.termsColumns}>
-                        <View style={styles.termsColumn}>
-                            <Text style={styles.termItem}>• 5 years standard warranty</Text>
-                            <Text style={styles.termItem}>• Free services as per schedule</Text>
-                            <Text style={styles.termItem}>• Roadside assistance included</Text>
-                        </View>
-                        <View style={styles.termsColumn}>
-                            <Text style={styles.termItem}>• Genuine parts only</Text>
-                            <Text style={styles.termItem}>• Service at authorized centers</Text>
-                            <Text style={styles.termItem}>• Subject to Bajaj terms</Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Signatures */}
+                {/* signatureSection */}
                 <View style={styles.signatureSection}>
                     <View style={styles.signatureBox}>
+                        <View style={styles.signatureLine}></View>
                         <Text style={styles.signatureLabel}>Customer Signature</Text>
-                        <Text style={styles.signaturePlaceholder}>_________________________</Text>
                     </View>
                     <View style={styles.signatureBox}>
-                        <Text style={styles.signatureLabel}>For ANITA MOTORS (BAJAJ)</Text>
-                        <Text style={styles.signaturePlaceholder}>_________________________</Text>
-                        <Text style={styles.signatureNote}>Authorized Bajaj Dealer</Text>
+                        <View style={styles.signatureLine}></View>
+                        <Text style={styles.signatureLabel}>For ANITA MOTORS</Text>
+                        <Text style={styles.signatureTitle}>Authorized Signatory</Text>
                     </View>
+                </View>
+
+                {/* akshay  */}
+                <View style={styles.termsSection}>
+                    <View style={styles.termsColumns}>
+                        <View style={styles.termsColumn}>
+                            <Text style={styles.termItem}>• Battery should not be over charged, if it is seen that the battery is bulging then the warranty will be terminated.</Text>
+                            <Text style={styles.termItem}>• Get all the batteries balanced by rotating in every 3 months from your nearest dealer.</Text>
+                            <Text style={styles.termItem}>• Keep the batteries away from water. Do not wash batteries. Batteries are sealed do not attempt to add acid.</Text>
+                        </View>
+                        <View style={styles.termsColumn}>
+                            <Text style={styles.termItem}>• Do not accelerate and brake abruptly. Do not over load the scooter. Keep batteries cool. Charge under shade</Text>
+                            <Text style={styles.termItem}>• Once a month, Discharge battery fully and Charge battery fully. Charge after at-least 30 minutes of a long drive</Text>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Terms and Service Schedule in Columns */}
+                <View style={styles.infoColumns}>
+                    {/* Terms & Conditions */}
+                    <View style={styles.termsContainer}>
+                        <View style={styles.boxHeader}>
+                            <Text style={styles.boxTitle}>PRECAUTION</Text>
+                        </View>
+                        <View style={styles.termsContent}>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>Battery: 8+4 GUARANTEE warranty</Text>
+                            </View>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>Motor & Controller: 1 year warranty</Text>
+                            </View>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>No warranty for charger</Text>
+                            </View>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>NO BULGING WARRANTY For All BATTERY</Text>
+                            </View>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>Avoid overcharging batteries</Text>
+                            </View>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>Get battery balanced every 3 months</Text>
+                            </View>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>Keep batteries away from water</Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Service Schedule */}
+                    <View style={styles.serviceContainer}>
+                        <View style={styles.boxHeader}>
+                            <Text style={styles.boxTitle}>SERVICE SCHEDULE:</Text>
+                        </View>
+                        <View style={styles.serviceContent}>
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>1.</Text>
+                                <Text style={styles.serviceText}>First free service: 500 KM or 2 months (<Text style={styles.highlight}>{getServiceDate(2)}</Text>)</Text>
+                            </View>
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>2.</Text>
+                                <Text style={styles.serviceText}>Second free service: 2000 KM or 4 months (<Text style={styles.highlight}>{getServiceDate(4)}</Text>)</Text>
+                            </View>
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>3.</Text>
+                                <Text style={styles.serviceText}>Third service: 4000 KM or 6 months (<Text style={styles.highlight}>{getServiceDate(6)}</Text>)</Text>
+                            </View>
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>4.</Text>
+                                <Text style={styles.serviceText}>Fourth Paid SERVICE 6000 KM OR 8 MONTHS (<Text style={styles.highlight}>{getServiceDate(8)}</Text>)</Text>
+                            </View>
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>5.</Text>
+                                <Text style={styles.serviceText}>FIFTH Paid SERVICE 8000 KM OR 10 MONTHS (<Text style={styles.highlight}>{getServiceDate(10)}</Text>)</Text>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Battery Care Advice */}
+                <View style={styles.batteryAdvice}>
+                    <Text style={styles.adviceText}>Do not accelerate and brake abruptly. Do not over load the scooter. Keep batteries cool. Charge under shade. Once a month, Discharge battery fully and Charge battery fully. Charge after at-least 30 minutes of a long drive.</Text>
+                </View>
+
+                {/* Footer */}
+                <View style={styles.footer}>
+                    <Text style={styles.footerText}>Thank you for your business!</Text>
+                    <View style={styles.footerDivider}></View>
+                    <Text style={styles.footerContact}>ANITA MOTORS | 8468857781 | anitamotors@example.com</Text>
+                    <Text style={styles.footerNote}>This is a computer generated invoice. No signature required.</Text>
                 </View>
             </Page>
         </Document>
@@ -1169,9 +1286,10 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                 {editMode ? 'Preview' : 'Edit'}
                             </button>
 
+                            {/* Replace the PDFDownloadLink section with this conditional version */}
                             <PDFDownloadLink
-                                document={<MyDocument />}
-                                fileName={`Invoice-${billData.billNumber}-Anita.pdf`}
+                                document={billFormat === 'standard' ? <MyDocument /> : <BajajDocument />}
+                                fileName={`Invoice-${billData.billNumber}-${billFormat === 'standard' ? 'Anita' : 'Bajaj'}.pdf`}
                                 className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2 transition-colors"
                             >
                                 {({ loading }) => (
@@ -1189,7 +1307,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                                                 </svg>
-                                                Download Anita Motors Invoice
+                                                Download {billFormat === 'standard' ? 'Anita Motors' : 'Bajaj'} Invoice
                                             </>
                                         )}
                                     </>
@@ -1519,7 +1637,8 @@ const styles = StyleSheet.create({
     infoColumns: {
         flexDirection: 'row',
         gap: 10,
-        marginBottom: 10
+        marginBottom: 10,
+        marginTop: 70
     },
 
     // Terms Section
