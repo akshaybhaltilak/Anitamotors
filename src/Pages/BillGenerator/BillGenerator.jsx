@@ -382,6 +382,19 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                     </View>
                 </View>
 
+                {/* signatureSection */}
+                <View style={styles.signatureSection}>
+                    <View style={styles.signatureBox}>
+                        <View style={styles.signatureLine}></View>
+                        <Text style={styles.signatureLabel}>Customer Signature</Text>
+                    </View>
+                    <View style={styles.signatureBox}>
+                        <View style={styles.signatureLine}></View>
+                        <Text style={styles.signatureLabel}>For ANITA MOTORS</Text>
+                        <Text style={styles.signatureTitle}>Authorized Signatory</Text>
+                    </View>
+                </View>
+
                 {/* Terms and Service Schedule in Columns */}
                 <View style={styles.infoColumns}>
                     {/* Terms & Conditions */}
@@ -454,19 +467,6 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                 {/* Battery Care Advice */}
                 <View style={styles.batteryAdvice}>
                     <Text style={styles.adviceText}>Do not accelerate and brake abruptly. Do not over load the scooter. Keep batteries cool. Charge under shade. Once a month, Discharge battery fully and Charge battery fully. Charge after at-least 30 minutes of a long drive.</Text>
-                </View>
-
-                {/* Signature Section */}
-                <View style={styles.signatureSection}>
-                    <View style={styles.signatureBox}>
-                        <View style={styles.signatureLine}></View>
-                        <Text style={styles.signatureLabel}>Customer Signature</Text>
-                    </View>
-                    <View style={styles.signatureBox}>
-                        <View style={styles.signatureLine}></View>
-                        <Text style={styles.signatureLabel}>For ANITA MOTORS</Text>
-                        <Text style={styles.signatureTitle}>Authorized Signatory</Text>
-                    </View>
                 </View>
 
                 {/* Footer */}
@@ -1457,7 +1457,7 @@ const styles = StyleSheet.create({
 
     // Calculation Section
     calculationContainer: {
-        marginBottom: 10
+        marginBottom: 40
     },
     calculationSection: {
         alignSelf: 'flex-end',
