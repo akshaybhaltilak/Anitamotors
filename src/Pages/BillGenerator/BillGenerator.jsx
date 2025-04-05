@@ -230,185 +230,255 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
 
     const MyDocument = () => (
         <Document>
-          <Page size="A4" style={styles.page}>
-            {/* Header Section with Logo Space */}
-            <View style={styles.header}>
-              <View style={styles.headerLeft}>
-                <Text style={styles.companyName}>ANITA MOTORS</Text>
-                <Text style={styles.companyAddress}>
-                  Shop no 2, Rahate complex, Jawahar Nagar,{"\n"}
-                  Akola 444001, Maharashtra
-                </Text>
-                <Text style={styles.companyContact}>Contact: 8468857781 | Email: anitamotors@example.com</Text>
-                <Text style={styles.gstInfo}>GSTIN: 27CSZPR0818J1ZX | State: Maharashtra (30)</Text>
-              </View>
-              <View style={styles.headerRight}>
-                {/* Logo placeholder */}
-                <View style={styles.logoPlaceholder}></View>
-              </View>
-            </View>
-      
-            {/* Invoice Title */}
-            <View style={styles.invoiceTitle}>
-              <Text style={styles.invoiceTitleText}>TAX INVOICE</Text>
-            </View>
-      
-            {/* Invoice Info Section */}
-            <View style={styles.infoSection}>
-              <View style={styles.invoiceDetails}>
+            <Page size="A4" style={styles.page}>
+                {/* Header Section with Logo and Company Info */}
+                <View style={styles.header}>
+                    <View style={styles.headerContent}>
+                        <View style={styles.headerLeft}>
+                            <Text style={styles.companyName}>ANITA MOTORS</Text>
+                            <Text style={styles.companyAddress}>
+                                Shop no 2, Rahate complex, Jawahar Nagar,{"\n"}
+                                Akola 444001, Maharashtra
+                            </Text>
+                            <Text style={styles.companyContact}>Contact: 8468857781 | Email: anitamotors@example.com</Text>
+                            <Text style={styles.gstInfo}>GSTIN: 27CSZPR0818J1ZX | State: Maharashtra (30)</Text>
+                        </View>
+                        <View style={styles.headerRight}>
+                            <View style={styles.logoBox}>
+                                <img
+                                    src="https://media.istockphoto.com/id/814423752/photo/eye-of-model-with-colorful-art-make-up-close-up.jpg?s=612x612&w=0&k=20&c=l15OdMWjgCKycMMShP8UK94ELVlEGvt7GmB_esHWPYE="
+                                    alt="Company Logo"
+                                    style={{ width: '100%', height: 'auto' }}
+                                />
+                            </View>
+                        </View>
+                    </View>
+                </View>
+
+                {/* Tax Invoice Title */}
+                <View style={styles.titleContainer}>
+                    <View style={styles.titleLine}></View>
+                    <Text style={styles.invoiceTitle}>TAX INVOICE</Text>
+                    <View style={styles.titleLine}></View>
+                </View>
+
+                {/* Invoice Info and Customer Details in a row */}
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Invoice No:</Text>
-                  <Text style={styles.infoValue}>{billData.billNumber}</Text>
+                    {/* Invoice Details */}
+                    <View style={styles.infoSection}>
+                        <View style={styles.infoItem}>
+                            <Text style={styles.infoLabel}>Invoice No:</Text>
+                            <Text style={styles.infoValue}>{billData.billNumber || 'AM0003'}</Text>
+                        </View>
+                        <View style={styles.infoItem}>
+                            <Text style={styles.infoLabel}>Date:</Text>
+                            <Text style={styles.infoValue}>{new Date(billData.date).toLocaleDateString('en-IN') || '5/4/2025'}</Text>
+                        </View>
+                        <View style={styles.infoItem}>
+                            <Text style={styles.infoLabel}>Mode:</Text>
+                            <Text style={styles.infoValue}>{billData.paymentMode || 'Cash'}</Text>
+                        </View>
+                    </View>
+
+                    {/* Customer Details */}
+                    <View style={styles.customerSection}>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>BILL TO:</Text>
+                        </View>
+                        <View style={styles.sectionContent}>
+                            <Text style={styles.customerName}>{billData.customerName || 'Akshay Bhaltilak'}</Text>
+                            <Text style={styles.detailText}>Contact: {billData.customerContact || '243214'}</Text>
+                            <Text style={styles.detailText}>Address: {billData.customerAddress || 'Akola, Maharashtra, Kanheri sarap Akola'}</Text>
+                        </View>
+                    </View>
                 </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Date:</Text>
-                  <Text style={styles.infoValue}>{new Date(billData.date).toLocaleDateString('en-IN')}</Text>
+
+                {/* Vehicle Details Section */}
+                <View style={styles.vehicleSection}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>VEHICLE DETAILS:</Text>
+                    </View>
+                    <View style={styles.vehicleDetailsGrid}>
+                        <View style={styles.vehicleNameRow}>
+                            <Text style={styles.vehicleName}>
+                                {vehicle.name} {vehicle.model}
+                            </Text>
+                            {/* <Text style={styles.vehicleColor}>Color: {vehicle.color || 'N/A'}</Text> */}
+                        </View>
+                        <View style={styles.vehicleDetailsRow}>
+                            <View style={styles.vehicleDetailItem}>
+                                <Text style={styles.vehicleDetailLabel}>Motor No:</Text>
+                                <Text style={styles.vehicleDetailValue}>{billData.motorNo || '-'}</Text>
+                            </View>
+                            <View style={styles.vehicleDetailItem}>
+                                <Text style={styles.vehicleDetailLabel}>Chassis No:</Text>
+                                <Text style={styles.vehicleDetailValue}>{billData.chassisNo || '-'}</Text>
+                            </View>
+                        </View>
+                        <View style={styles.vehicleDetailsRow}>
+                            <View style={styles.vehicleDetailItem}>
+                                <Text style={styles.vehicleDetailLabel}>Battery No:</Text>
+                                <Text style={styles.vehicleDetailValue}>{billData.batteryNo || '-'}</Text>
+                            </View>
+                            <View style={styles.vehicleDetailItem}>
+                                <Text style={styles.vehicleDetailLabel}>Controller No:</Text>
+                                <Text style={styles.vehicleDetailValue}>{billData.controllerNo || '-'}</Text>
+                            </View>
+                        </View>
+                    </View>
                 </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Mode:</Text>
-                  <Text style={styles.infoValue}>{billData.paymentMode || 'Cash'}</Text>
+
+                {/* Product Table */}
+                <View style={styles.tableContainer}>
+                    <View style={styles.tableHeader}>
+                        <Text style={[styles.tableHeaderCell, styles.serialNoCell]}>#</Text>
+                        <Text style={[styles.tableHeaderCell, styles.descriptionCell]}>DESCRIPTION</Text>
+                        <Text style={[styles.tableHeaderCell, styles.hsnCell]}>HSN</Text>
+                        <Text style={[styles.tableHeaderCell, styles.rateCell]}>RATE</Text>
+                        <Text style={[styles.tableHeaderCell, styles.qtyCell]}>QTY</Text>
+                        <Text style={[styles.tableHeaderCell, styles.amountCell]}>AMOUNT</Text>
+                    </View>
+
+                    <View style={styles.tableRow}>
+                        <Text style={[styles.tableCell, styles.serialNoCell]}>1</Text>
+                        <Text style={[styles.tableCell, styles.descriptionCell]}>
+                            {vehicle.name} {vehicle.model}
+                        </Text>
+                        <Text style={[styles.tableCell, styles.hsnCell]}>{hsnNumber || '87141090'}</Text>
+                        <Text style={[styles.tableCell, styles.rateCell]}>
+                            {((basePrice || 50000) / (billData.quantity || 1)).toFixed(2)}
+                        </Text>
+                        <Text style={[styles.tableCell, styles.qtyCell]}>
+                            {billData.quantity || 1}
+                        </Text>
+                        <Text style={[styles.tableCell, styles.amountCell]}>
+                            {(basePrice || 50000).toFixed(2)}
+                        </Text>
+                    </View>
                 </View>
-              </View>
-            </View>
-      
-            {/* Customer & Vehicle Section */}
-            <View style={styles.detailsContainer}>
-              <View style={styles.detailsBox}>
-                <Text style={styles.detailsTitle}>BILL TO:</Text>
-                <Text style={styles.customerName}>{billData.customerName}</Text>
-                <Text style={styles.detailText}>Contact: {billData.customerContact || '-'}</Text>
-                <Text style={styles.detailText}>Address: {billData.customerAddress || '-'}</Text>
-              </View>
-              <View style={styles.detailsBox}>
-                <Text style={styles.detailsTitle}>VEHICLE DETAILS:</Text>
-                <Text style={styles.vehicleName}>
-                  {vehicle.name} {vehicle.model}
-                </Text>
-                <Text style={styles.detailText}>Color: {vehicle.color || 'N/A'}</Text>
-                <Text style={styles.detailText}>Motor No: {billData.motorNo}</Text>
-                <Text style={styles.detailText}>Chassis No: {billData.chassisNo}</Text>
-                {billData.batteryNo && <Text style={styles.detailText}>Battery No: {billData.batteryNo}</Text>}
-                {billData.controllerNo && <Text style={styles.detailText}>Controller No: {billData.controllerNo}</Text>}
-              </View>
-            </View>
-      
-            {/* Product Table */}
-            <View style={styles.tableContainer}>
-              {/* Table Header */}
-              <View style={styles.tableHeader}>
-                <Text style={[styles.tableHeaderCell, { width: '5%' }]}>#</Text>
-                <Text style={[styles.tableHeaderCell, { width: '45%' }]}>DESCRIPTION</Text>
-                <Text style={[styles.tableHeaderCell, { width: '10%' }]}>HSN</Text>
-                <Text style={[styles.tableHeaderCell, { width: '15%' }]}>RATE</Text>
-                <Text style={[styles.tableHeaderCell, { width: '10%' }]}>QTY</Text>
-                <Text style={[styles.tableHeaderCell, { width: '15%' }]}>AMOUNT</Text>
-              </View>
-      
-              {/* Table Row */}
-              <View style={styles.tableRow}>
-                <Text style={[styles.tableCell, { width: '5%' }]}>1</Text>
-                <Text style={[styles.tableCell, { width: '45%' }]}>
-                  {vehicle.name} {vehicle.model}
-                </Text>
-                <Text style={[styles.tableCell, { width: '10%' }]}>{hsnNumber}</Text>
-                <Text style={[styles.tableCell, { width: '15%', textAlign: 'right' }]}>
-                  {(basePrice / billData.quantity).toFixed(2)}
-                </Text>
-                <Text style={[styles.tableCell, { width: '10%', textAlign: 'center' }]}>
-                  {billData.quantity}
-                </Text>
-                <Text style={[styles.tableCell, { width: '15%', textAlign: 'right' }]}>
-                  {basePrice.toFixed(2)}
-                </Text>
-              </View>
-            </View>
-      
-            {/* Amount Calculation Section */}
-            <View style={styles.amountSection}>
-              <View style={styles.amountRow}>
-                <Text style={styles.amountLabel}>Subtotal:</Text>
-                <Text style={styles.amountValue}>₹ {basePrice.toFixed(2)}</Text>
-              </View>
-              <View style={styles.amountRow}>
-                <Text style={styles.amountLabel}>CGST (2.5%):</Text>
-                <Text style={styles.amountValue}>₹ {cgst.toFixed(2)}</Text>
-              </View>
-              <View style={styles.amountRow}>
-                <Text style={styles.amountLabel}>SGST (2.5%):</Text>
-                <Text style={styles.amountValue}>₹ {sgst.toFixed(2)}</Text>
-              </View>
-              <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>TOTAL AMOUNT:</Text>
-                <Text style={styles.totalValue}>₹ {finalAmount.toFixed(2)}</Text>
-              </View>
-              <View style={styles.amountWords}>
-                <Text style={styles.amountWordsText}>Amount in Words: {numberToWords(finalAmount)}</Text>
-              </View>
-            </View>
-      
-            {/* Terms and Conditions */}
-            <View style={styles.termsContainer}>
-              <Text style={styles.sectionTitle}>TERMS & CONDITIONS:</Text>
-              <View style={styles.termsColumns}>
-                <View style={styles.termsCol}>
-                  <Text style={styles.termItem}>• Battery: 8+4 GUARANTEE warranty</Text>
-                  <Text style={styles.termItem}>• Motor & Controller: 1 year warranty</Text>
-                  <Text style={styles.termItem}>• No warranty for charger</Text>
-                  <Text style={styles.termItem}>• NO BULGING WARRANTY For All BATTERY</Text>
+
+                {/* Amount Calculation with Word Amount */}
+                <View style={styles.calculationContainer}>
+                    <View style={styles.calculationSection}>
+                        <View style={styles.calcRow}>
+                            <Text style={styles.calcLabel}>Subtotal:</Text>
+                            <Text style={styles.calcValue}>₹ {(basePrice || 50000).toFixed(2)}</Text>
+                        </View>
+                        <View style={styles.calcRow}>
+                            <Text style={styles.calcLabel}>CGST (2.5%):</Text>
+                            <Text style={styles.calcValue}>₹ {(cgst || 1250).toFixed(2)}</Text>
+                        </View>
+                        <View style={styles.calcRow}>
+                            <Text style={styles.calcLabel}>SGST (2.5%):</Text>
+                            <Text style={styles.calcValue}>₹ {(sgst || 1250).toFixed(2)}</Text>
+                        </View>
+                        <View style={styles.totalRow}>
+                            <Text style={styles.totalLabel}>TOTAL AMOUNT:</Text>
+                            <Text style={styles.totalValue}>₹ {(finalAmount || 52500).toFixed(2)}</Text>
+                        </View>
+                    </View>
+                    <View style={styles.amountInWords}>
+                        <Text style={styles.amountWordsText}>Amount in Words: {numberToWords(finalAmount || 52500)}</Text>
+                    </View>
                 </View>
-                <View style={styles.termsCol}>
-                  <Text style={styles.termItem}>• Avoid overcharging batteries</Text>
-                  <Text style={styles.termItem}>• Get battery balanced every 3 months</Text>
-                  <Text style={styles.termItem}>• Keep batteries away from water</Text>
-                  <Text style={styles.termItem}>• Do not accelerate and brake abruptly. Do not over load the scooter. Keep batteries cool. Charge under shade.</Text>
-                  <Text style={styles.termItem}>• Once a month, Discharge battery fully and Charge battery fully. Charge after at-least 30 minutes of a long drive.</Text>
+
+                {/* Terms and Service Schedule in Columns */}
+                <View style={styles.infoColumns}>
+                    {/* Terms & Conditions */}
+                    <View style={styles.termsContainer}>
+                        <View style={styles.boxHeader}>
+                            <Text style={styles.boxTitle}>TERMS & CONDITIONS:</Text>
+                        </View>
+                        <View style={styles.termsContent}>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>Battery: 8+4 GUARANTEE warranty</Text>
+                            </View>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>Motor & Controller: 1 year warranty</Text>
+                            </View>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>No warranty for charger</Text>
+                            </View>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>NO BULGING WARRANTY For All BATTERY</Text>
+                            </View>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>Avoid overcharging batteries</Text>
+                            </View>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>Get battery balanced every 3 months</Text>
+                            </View>
+                            <View style={styles.termItem}>
+                                <Text style={styles.bullet}>•</Text>
+                                <Text style={styles.termText}>Keep batteries away from water</Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Service Schedule */}
+                    <View style={styles.serviceContainer}>
+                        <View style={styles.boxHeader}>
+                            <Text style={styles.boxTitle}>SERVICE SCHEDULE:</Text>
+                        </View>
+                        <View style={styles.serviceContent}>
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>1.</Text>
+                                <Text style={styles.serviceText}>First free service: 500 KM or 2 months (<Text style={styles.highlight}>{getServiceDate(2)}</Text>)</Text>
+                            </View>
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>2.</Text>
+                                <Text style={styles.serviceText}>Second free service: 2000 KM or 4 months (<Text style={styles.highlight}>{getServiceDate(4)}</Text>)</Text>
+                            </View>
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>3.</Text>
+                                <Text style={styles.serviceText}>Third service: 4000 KM or 6 months (<Text style={styles.highlight}>{getServiceDate(6)}</Text>)</Text>
+                            </View>
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>4.</Text>
+                                <Text style={styles.serviceText}>Fourth Paid SERVICE 6000 KM OR 8 MONTHS (<Text style={styles.highlight}>{getServiceDate(8)}</Text>)</Text>
+                            </View>
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>5.</Text>
+                                <Text style={styles.serviceText}>FIFTH Paid SERVICE 8000 KM OR 10 MONTHS (<Text style={styles.highlight}>{getServiceDate(10)}</Text>)</Text>
+                            </View>
+                        </View>
+                    </View>
                 </View>
-              </View>
-            </View>
-      
-            {/* Service Schedule */}
-            <View style={styles.serviceContainer}>
-              <Text style={styles.sectionTitle}>SERVICE SCHEDULE:</Text>
-              <Text style={styles.serviceItem}>
-                1. First free service: 500 KM or 2 months (<Text style={styles.highlight}>{getServiceDate(2)}</Text>)
-              </Text>
-              <Text style={styles.serviceItem}>
-                2. Second free service: 2000 KM or 4 months (<Text style={styles.highlight}>{getServiceDate(4)}</Text>)
-              </Text>
-              <Text style={styles.serviceItem}>
-                3. Third service: 4000 KM or 6 months (<Text style={styles.highlight}>{getServiceDate(6)}</Text>)
-              </Text>
-              <Text style={styles.serviceItem}>
-                4. Fourth Paid SERVICE 6000 KM OR 8 MONTHS WHICHEVER COMES FIRST (<Text style={styles.highlight}>{getServiceDate(8)}</Text>)
-              </Text>
-              <Text style={styles.serviceItem}>
-                5. FIFTH Paid SERVICE 8000 KM OR 10 MONTHS WHICHEVER COMES FIRST (<Text style={styles.highlight}>{getServiceDate(10)}</Text>)
-              </Text>
-            </View>
-      
-            {/* Signature Section */}
-            <View style={styles.signatureSection}>
-              <View style={styles.signatureBox}>
-                <Text style={styles.signatureLabel}>Customer Signature</Text>
-                <Text style={styles.signatureLine}>_________________________</Text>
-              </View>
-              <View style={styles.signatureBox}>
-                <Text style={styles.signatureLabel}>For ANITA MOTORS</Text>
-                <Text style={styles.signatureLine}>_________________________</Text>
-                <Text style={styles.signatureCaption}>Authorized Signatory</Text>
-              </View>
-            </View>
-      
-            {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Thank you for your business!</Text>
-              <View style={styles.footerDivider} />
-              <Text style={styles.footerContact}>ANITA MOTORS | 8468857781 | anitamotors@example.com</Text>
-              <Text style={styles.footerNote}>This is a computer generated invoice. No signature required.</Text>
-            </View>
-          </Page>
+
+                {/* Battery Care Advice */}
+                <View style={styles.batteryAdvice}>
+                    <Text style={styles.adviceText}>Do not accelerate and brake abruptly. Do not over load the scooter. Keep batteries cool. Charge under shade. Once a month, Discharge battery fully and Charge battery fully. Charge after at-least 30 minutes of a long drive.</Text>
+                </View>
+
+                {/* Signature Section */}
+                <View style={styles.signatureSection}>
+                    <View style={styles.signatureBox}>
+                        <View style={styles.signatureLine}></View>
+                        <Text style={styles.signatureLabel}>Customer Signature</Text>
+                    </View>
+                    <View style={styles.signatureBox}>
+                        <View style={styles.signatureLine}></View>
+                        <Text style={styles.signatureLabel}>For ANITA MOTORS</Text>
+                        <Text style={styles.signatureTitle}>Authorized Signatory</Text>
+                    </View>
+                </View>
+
+                {/* Footer */}
+                <View style={styles.footer}>
+                    <Text style={styles.footerText}>Thank you for your business!</Text>
+                    <View style={styles.footerDivider}></View>
+                    <Text style={styles.footerContact}>ANITA MOTORS | 8468857781 | anitamotors@example.com</Text>
+                    <Text style={styles.footerNote}>This is a computer generated invoice. No signature required.</Text>
+                </View>
+            </Page>
         </Document>
-      );
+    );
     // Bajaj PDF Document
     const BajajDocument = () => (
         <Document>
@@ -961,7 +1031,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                 <p>Contact: {billData.customerContact || '-'}</p>
                                 <p>Address: {billData.customerAddress || '-'}</p>
                             </div>
-{/* 
+                            {/* 
                             <div className="mb-6">
                                 <h3 className="font-bold border-b pb-1">VEHICLE DETAILS:</h3>
                                 <p className="font-semibold">{vehicle.name} {vehicle.model}</p>
@@ -1134,270 +1204,464 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
 };
 const styles = StyleSheet.create({
     page: {
-      padding: 30,
-      fontFamily: 'Helvetica',
-      fontSize: 10,
-      lineHeight: 1.5,
-      backgroundColor: '#ffffff'
+        padding: 30,
+        fontFamily: 'Helvetica',
+        fontSize: 10,
+        lineHeight: 1.4,
+        color: '#333333'
     },
+
+    // Header Section
     header: {
-      flexDirection: 'row',
-      marginBottom: 15,
-      borderBottomWidth: 1,
-      borderBottomColor: '#dddddd',
-      paddingBottom: 10
+        borderBottomWidth: 2,
+        borderBottomColor: '#3498db',
+        paddingBottom: 10,
+        marginBottom: 10
+    },
+    headerContent: {
+        flexDirection: 'row',
     },
     headerLeft: {
-      flex: 3
+        flex: 3,
     },
     headerRight: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    logoPlaceholder: {
-      width: 100,
-      height: 60,
-      borderRadius: 5,
-      backgroundColor: '#f0f0f0',
-      borderWidth: 1,
-      borderStyle: 'dashed',
-      borderColor: '#cccccc'
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center'
     },
     companyName: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      marginBottom: 5,
-      color: '#333333'
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#2c3e50',
+        marginBottom: 10,
+        letterSpacing: 1
     },
     companyAddress: {
-      fontSize: 9,
-      color: '#666666',
-      marginBottom: 3
+        fontSize: 9,
+        color: '#555555',
+        marginBottom: 2
     },
     companyContact: {
-      fontSize: 9,
-      color: '#666666',
-      marginBottom: 3
+        fontSize: 9,
+        color: '#555555',
+        marginBottom: 2
     },
     gstInfo: {
-      fontSize: 9,
-      color: '#666666'
+        fontSize: 9,
+        fontWeight: 'bold',
+        color: '#555555'
+    },
+    logoBox: {
+        width: 80,
+        height: 50,
+        borderRadius: 4,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    logoText: {
+        fontSize: 12,
+        fontWeight: 'bold'
+    },
+
+    // Title Section
+    titleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 8
+    },
+    titleLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#3498db'
     },
     invoiceTitle: {
-      alignItems: 'center',
-      marginBottom: 15
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#2c3e50',
+        marginHorizontal: 15,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        backgroundColor: '#ecf0f1',
+        borderRadius: 3
     },
-    invoiceTitleText: {
-      fontSize: 14,
-      fontWeight: 'bold',
-      padding: 6,
-      backgroundColor: '#f8f8f8',
-      color: '#333333',
-      width: '100%',
-      textAlign: 'center',
-      borderRadius: 4
-    },
-    infoSection: {
-      marginBottom: 15
-    },
-    invoiceDetails: {
-      width: '50%'
-    },
+
+    // Info Row (Invoice details and customer info)
     infoRow: {
-      flexDirection: 'row',
-      marginBottom: 5
+        flexDirection: 'row',
+        marginBottom: 10,
+        gap: 10
+    },
+
+    // Invoice Info Section
+    infoSection: {
+        flex: 1,
+        backgroundColor: '#f8f9fa',
+        borderRadius: 4,
+        padding: 10,
+        borderLeftWidth: 3,
+        borderLeftColor: '#3498db'
+    },
+    infoItem: {
+        flexDirection: 'row',
+        marginBottom: 3
     },
     infoLabel: {
-      width: '30%',
-      fontWeight: 'bold',
-      color: '#555555'
+        width: '40%',
+        fontWeight: 'bold',
+        color: '#555555'
     },
     infoValue: {
-      width: '70%'
+        flex: 1,
+        color: '#333333'
     },
-    detailsContainer: {
-      flexDirection: 'row',
-      marginBottom: 15,
-      gap: 15
+
+    // Customer Section
+    customerSection: {
+        flex: 2,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        borderRadius: 4,
+        overflow: 'hidden'
     },
-    detailsBox: {
-      flex: 1,
-      padding: 10,
-      borderRadius: 4,
-      backgroundColor: '#f9f9f9',
-      borderWidth: 1,
-      borderColor: '#eeeeee'
-    },
-    detailsTitle: {
-      fontWeight: 'bold',
-      marginBottom: 5,
-      color: '#555555',
-      fontSize: 11
-    },
-    customerName: {
-      fontWeight: 'bold',
-      fontSize: 11,
-      marginBottom: 3
-    },
-    vehicleName: {
-      fontWeight: 'bold',
-      fontSize: 11,
-      marginBottom: 3
-    },
-    detailText: {
-      fontSize: 9,
-      marginBottom: 2
-    },
-    tableContainer: {
-      marginBottom: 15
-    },
-    tableHeader: {
-      flexDirection: 'row',
-      backgroundColor: '#f0f0f0',
-      padding: 6,
-      borderTopLeftRadius: 4,
-      borderTopRightRadius: 4
-    },
-    tableHeaderCell: {
-      fontWeight: 'bold',
-      fontSize: 9,
-      color: '#444444'
-    },
-    tableRow: {
-      flexDirection: 'row',
-      borderBottomWidth: 1,
-      borderBottomColor: '#eeeeee',
-      padding: 8
-    },
-    tableCell: {
-      fontSize: 10
-    },
-    amountSection: {
-      alignSelf: 'flex-end',
-      width: '40%',
-      marginBottom: 20
-    },
-    amountRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: 4
-    },
-    amountLabel: {
-      color: '#555555'
-    },
-    amountValue: {
-      textAlign: 'right'
-    },
-    totalRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginTop: 6,
-      paddingTop: 6,
-      borderTopWidth: 1,
-      borderTopColor: '#dddddd'
-    },
-    totalLabel: {
-      fontWeight: 'bold',
-      fontSize: 11
-    },
-    totalValue: {
-      fontWeight: 'bold',
-      fontSize: 11
-    },
-    amountWords: {
-      marginTop: 8,
-      padding: 6,
-      backgroundColor: '#f9f9f9',
-      borderRadius: 4,
-      fontSize: 9
-    },
-    amountWordsText: {
-      fontSize: 9,
-      fontStyle: 'italic'
-    },
-    termsContainer: {
-      marginBottom: 15
+    sectionHeader: {
+        backgroundColor: '#ecf0f1',
+        padding: 5,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0'
     },
     sectionTitle: {
-      fontWeight: 'bold',
-      marginBottom: 8,
-      color: '#444444',
-      fontSize: 11,
-      textDecoration: 'underline'
+        fontWeight: 'bold',
+        color: '#2c3e50',
+        fontSize: 10
     },
-    termsColumns: {
-      flexDirection: 'row',
-      gap: 10
+    sectionContent: {
+        padding: 8
     },
-    termsCol: {
-      flex: 1
+    customerName: {
+        fontWeight: 'bold',
+        fontSize: 11,
+        marginBottom: 3,
+        color: '#2c3e50'
+    },
+    detailText: {
+        fontSize: 9,
+        color: '#555555',
+        marginBottom: 2
+    },
+
+    // Vehicle Section
+    vehicleSection: {
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        borderRadius: 4,
+        overflow: 'hidden',
+        marginBottom: 10
+    },
+    vehicleDetailsGrid: {
+        padding: 8
+    },
+    vehicleNameRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 5,
+        paddingBottom: 5,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eeeeee'
+    },
+    vehicleName: {
+        fontWeight: 'bold',
+        fontSize: 11,
+        color: '#2c3e50'
+    },
+    vehicleColor: {
+        fontSize: 9,
+        color: '#555555'
+    },
+    vehicleDetailsRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 3
+    },
+    vehicleDetailItem: {
+        flex: 1,
+        flexDirection: 'row'
+    },
+    vehicleDetailLabel: {
+        width: '40%',
+        fontSize: 9,
+        color: '#555555',
+        fontWeight: 'bold'
+    },
+    vehicleDetailValue: {
+        flex: 1,
+        fontSize: 9,
+        color: '#333333'
+    },
+
+    // Table Styles
+    tableContainer: {
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        borderRadius: 4,
+        overflow: 'hidden',
+        marginBottom: 10
+    },
+    tableHeader: {
+        flexDirection: 'row',
+        backgroundColor: '#3498db',
+        paddingVertical: 6
+    },
+    tableHeaderCell: {
+        fontWeight: 'bold',
+        fontSize: 9,
+        color: 'white',
+        paddingHorizontal: 5
+    },
+    serialNoCell: {
+        width: '5%',
+        textAlign: 'center'
+    },
+    descriptionCell: {
+        width: '45%',
+        paddingLeft: 5
+    },
+    hsnCell: {
+        width: '10%',
+        textAlign: 'center'
+    },
+    rateCell: {
+        width: '15%',
+        textAlign: 'right',
+        paddingRight: 5
+    },
+    qtyCell: {
+        width: '10%',
+        textAlign: 'center'
+    },
+    amountCell: {
+        width: '15%',
+        textAlign: 'right',
+        paddingRight: 5
+    },
+    tableRow: {
+        flexDirection: 'row',
+        paddingVertical: 8,
+        backgroundColor: '#f9f9f9'
+    },
+    tableCell: {
+        fontSize: 9,
+        color: '#333333',
+        paddingHorizontal: 5
+    },
+
+    // Calculation Section
+    calculationContainer: {
+        marginBottom: 10
+    },
+    calculationSection: {
+        alignSelf: 'flex-end',
+        width: '40%',
+        backgroundColor: '#f8f9fa',
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        borderRadius: 4,
+        padding: 8
+    },
+    calcRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 3
+    },
+    calcLabel: {
+        fontSize: 9,
+        color: '#555555'
+    },
+    calcValue: {
+        fontSize: 9,
+        color: '#333333',
+        textAlign: 'right'
+    },
+    totalRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 5,
+        paddingTop: 5,
+        borderTopWidth: 1,
+        borderTopColor: '#dddddd'
+    },
+    totalLabel: {
+        fontWeight: 'bold',
+        fontSize: 10,
+        color: '#2c3e50'
+    },
+    totalValue: {
+        fontWeight: 'bold',
+        fontSize: 10,
+        color: '#2c3e50'
+    },
+    amountInWords: {
+        marginTop: 5,
+        padding: 5,
+        backgroundColor: '#f0f4f8',
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#d1d9e6',
+        borderStyle: 'dashed'
+    },
+    amountWordsText: {
+        fontSize: 9,
+        fontStyle: 'italic',
+        color: '#555555'
+    },
+
+    // Info Columns (Terms and Service)
+    infoColumns: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 10
+    },
+
+    // Terms Section
+    termsContainer: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        borderRadius: 4,
+        overflow: 'hidden'
+    },
+    boxHeader: {
+        backgroundColor: '#ecf0f1',
+        padding: 5,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0'
+    },
+    boxTitle: {
+        fontWeight: 'bold',
+        color: '#2c3e50',
+        fontSize: 10
+    },
+    termsContent: {
+        padding: 5
     },
     termItem: {
-      fontSize: 8,
-      marginBottom: 3,
-      color: '#555555'
+        flexDirection: 'row',
+        marginBottom: 2,
+        alignItems: 'flex-start'
     },
+    bullet: {
+        marginRight: 3,
+        color: '#3498db'
+    },
+    termText: {
+        fontSize: 8,
+        color: '#555555',
+        flex: 1
+    },
+
+    // Service Section
     serviceContainer: {
-      marginBottom: 15
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        borderRadius: 4,
+        overflow: 'hidden'
+    },
+    serviceContent: {
+        padding: 5
     },
     serviceItem: {
-      fontSize: 8,
-      marginBottom: 3,
-      color: '#555555'
+        flexDirection: 'row',
+        marginBottom: 2,
+        alignItems: 'flex-start'
+    },
+    serviceNumber: {
+        width: 12,
+        fontSize: 8,
+        color: '#555555'
+    },
+    serviceText: {
+        fontSize: 8,
+        color: '#555555',
+        flex: 1
     },
     highlight: {
-      fontWeight: 'bold',
-      color: '#000000'
+        fontWeight: 'bold',
+        color: '#e74c3c'
     },
+
+    // Battery Advice
+    batteryAdvice: {
+        backgroundColor: '#fff8e1',
+        borderRadius: 4,
+        padding: 8,
+        marginBottom: 15,
+        borderLeftWidth: 3,
+        borderLeftColor: '#ffb300'
+    },
+    adviceText: {
+        fontSize: 8,
+        color: '#5d4037',
+        fontStyle: 'italic'
+    },
+
+    // Signature Section
     signatureSection: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginTop: 20,
-      marginBottom: 20
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 20
     },
     signatureBox: {
-      width: '40%',
-      alignItems: 'center'
-    },
-    signatureLabel: {
-      fontSize: 10,
-      marginBottom: 25,
-      fontWeight: 'bold'
+        width: '40%',
+        alignItems: 'center'
     },
     signatureLine: {
-      fontSize: 10
+        height: 1,
+        width: '100%',
+        backgroundColor: '#cccccc',
+        marginBottom: 5
     },
-    signatureCaption: {
-      fontSize: 8,
-      marginTop: 5,
-      fontStyle: 'italic'
+    signatureLabel: {
+        fontSize: 9,
+        fontWeight: 'bold',
+        color: '#555555'
     },
+    signatureTitle: {
+        fontSize: 8,
+        color: '#777777',
+        fontStyle: 'italic'
+    },
+
+    // Footer
     footer: {
-      marginTop: 10,
-      alignItems: 'center'
+        marginTop: 5,
+        borderTopWidth: 1,
+        borderTopColor: '#e0e0e0',
+        paddingTop: 10,
+        alignItems: 'center'
     },
     footerText: {
-      fontSize: 10,
-      fontWeight: 'bold',
-      marginBottom: 5
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#2c3e50',
+        marginBottom: 5
     },
     footerDivider: {
-      width: '100%',
-      borderBottomWidth: 1,
-      borderBottomColor: '#dddddd',
-      marginBottom: 5
+        width: '30%',
+        height: 2,
+        backgroundColor: '#3498db',
+        marginBottom: 5
     },
     footerContact: {
-      fontSize: 8,
-      color: '#666666',
-      marginBottom: 3
+        fontSize: 8,
+        color: '#555555',
+        marginBottom: 3
     },
     footerNote: {
-      fontSize: 8,
-      fontStyle: 'italic',
-      color: '#888888'
+        fontSize: 7,
+        color: '#888888',
+        fontStyle: 'italic'
     }
-  });
+});
 
 export default BillGenerator;
