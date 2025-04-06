@@ -272,12 +272,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                             <Text style={styles.infoLabel}>Invoice No:</Text>
                             <Text style={styles.infoValue}>{billData.billNumber || 'AM0003'}</Text>
                         </View>
-                        <View style={styles.infoItem}>
-                            <Text style={styles.infoLabel}>GSTIN NO:</Text>
-                            <Text style={styles.infoValue}>
-                                {gstinNumber || '-'}
-                            </Text>
-                        </View>
+                        
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Date:</Text>
                             <Text style={styles.infoValue}>{new Date(billData.date).toLocaleDateString('en-IN') || '5/4/2025'}</Text>
@@ -297,6 +292,13 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                             <Text style={styles.customerName}>{billData.customerName || 'Akshay Bhaltilak'}</Text>
                             <Text style={styles.detailText}>Contact: {billData.customerContact || '243214'}</Text>
                             <Text style={styles.detailText}>Address: {billData.customerAddress || 'Akola, Maharashtra, Kanheri sarap Akola'}</Text>
+                            <Text style={styles.infoLabel}>GSTIN NO:</Text>
+                            <Text style={styles.infoValue}>
+                                {gstinNumber || '-'}
+                            </Text>
+                        </View>
+                        <View style={styles.infoItem}>
+                            
                         </View>
                     </View>
                 </View>
@@ -406,6 +408,8 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                 {/* akshay  */}
                 <View style={styles.termsSection}>
                     <View style={styles.termsColumns}>
+                    <Text style={styles.boxTitle}>Precaution</Text>
+
                         <View style={styles.termsColumn}>
                             <Text style={styles.termItem}>• Battery should not be over charged, if it is seen that the battery is bulging then the warranty will be terminated.</Text>
                             <Text style={styles.termItem}>• Get all the batteries balanced by rotating in every 3 months from your nearest dealer.</Text>
@@ -423,7 +427,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                     {/* Terms & Conditions */}
                     <View style={styles.termsContainer}>
                         <View style={styles.boxHeader}>
-                            <Text style={styles.boxTitle}>PRECAUTION</Text>
+                            <Text style={styles.boxTitle}>Gaurantee & Warranty</Text>
                         </View>
                         <View style={styles.termsContent}>
                             <View style={styles.termItem}>
@@ -465,13 +469,13 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                         <View style={styles.serviceContent}>
                             <View style={styles.serviceItem}>
                                 <Text style={styles.serviceNumber}>1.</Text>
-                                <Text style={styles.serviceText}>First free service: 500 KM or 2 months (<Text style={styles.highlight}>{getServiceDate(2)}</Text>)</Text>
+                                <Text style={styles.serviceText}>First service: 500 KM or 2 months (<Text style={styles.highlight}>{getServiceDate(2)}</Text>)</Text>
                             </View>
                             <View style={styles.stampSpace}></View>
 
                             <View style={styles.serviceItem}>
                                 <Text style={styles.serviceNumber}>2.</Text>
-                                <Text style={styles.serviceText}>Second free service: 2000 KM or 4 months (<Text style={styles.highlight}>{getServiceDate(4)}</Text>)</Text>
+                                <Text style={styles.serviceText}>Second service: 2000 KM or 4 months (<Text style={styles.highlight}>{getServiceDate(4)}</Text>)</Text>
                             </View>
                             <View style={styles.stampSpace}></View>
 
@@ -483,13 +487,13 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
 
                             <View style={styles.serviceItem}>
                                 <Text style={styles.serviceNumber}>4.</Text>
-                                <Text style={styles.serviceText}>Fourth Paid SERVICE 6000 KM OR 8 MONTHS (<Text style={styles.highlight}>{getServiceDate(8)}</Text>)</Text>
+                                <Text style={styles.serviceText}>Fourth SERVICE 6000 KM OR 8 MONTHS (<Text style={styles.highlight}>{getServiceDate(8)}</Text>)</Text>
                             </View>
                             <View style={styles.stampSpace}></View>
 
                             <View style={styles.serviceItem}>
                                 <Text style={styles.serviceNumber}>5.</Text>
-                                <Text style={styles.serviceText}>FIFTH Paid SERVICE 8000 KM OR 10 MONTHS (<Text style={styles.highlight}>{getServiceDate(10)}</Text>)</Text>
+                                <Text style={styles.serviceText}>FIFTH SERVICE 8000 KM OR 10 MONTHS (<Text style={styles.highlight}>{getServiceDate(10)}</Text>)</Text>
                             </View>
                             <View style={styles.stampSpace}></View>
                         </View>
@@ -551,12 +555,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                             <Text style={styles.infoLabel}>Invoice No:</Text>
                             <Text style={styles.infoValue}>{billData.billNumber}</Text>
                         </View>
-                        <View style={styles.infoItem}> 
-                            <Text style={styles.infoLabel}>GSTIN NO:</Text>
-                            <Text style={styles.infoValue}>
-                                {gstinNumber || '-'}
-                            </Text>
-                        </View>
+                       
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Date:</Text>
                             <Text style={styles.infoValue}>{new Date(billData.date).toLocaleDateString('en-IN')}</Text>
@@ -572,6 +571,13 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                             <Text style={styles.customerName}>{billData.customerName}</Text>
                             <Text style={styles.detailText}>Contact: {billData.customerContact || '-'}</Text>
                             <Text style={styles.detailText}>Address: {billData.customerAddress || '-'}</Text>
+                            <Text style={styles.infoLabel}>GSTIN NO:</Text>
+                            <Text style={styles.infoValue}>
+                                {gstinNumber || '-'}
+                            </Text>
+                        </View>
+                        <View style={styles.infoItem}> 
+                           
                         </View>
                     </View>
                 </View>
@@ -658,6 +664,9 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                 {/* akshay  */}
                 <View style={styles.termsSection}>
                     <View style={styles.termsColumns}>
+                    <View style={styles.boxHeader}>
+                            <Text style={styles.boxTitle}>Precaution</Text>
+                        </View>
                         <View style={styles.termsColumn}>
                             <Text style={styles.termItem}>• Battery should not be over charged, if it is seen that the battery is bulging then the warranty will be terminated.</Text>
                             <Text style={styles.termItem}>• Get all the batteries balanced by rotating in every 3 months from your nearest dealer.</Text>
@@ -675,7 +684,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                     {/* Terms & Conditions */}
                     <View style={styles.termsContainer}>
                         <View style={styles.boxHeader}>
-                            <Text style={styles.boxTitle}>PRECAUTION</Text>
+                            <Text style={styles.boxTitle}>Guarantee & Warranty</Text>
                         </View>
                         <View style={styles.termsContent}>
                             <View style={styles.termItem}>
@@ -717,13 +726,13 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                         <View style={styles.serviceContent}>
                             <View style={styles.serviceItem}>
                                 <Text style={styles.serviceNumber}>1.</Text>
-                                <Text style={styles.serviceText}>First free service: 500 KM or 2 months (<Text style={styles.highlight}>{getServiceDate(2)}</Text>)</Text>
+                                <Text style={styles.serviceText}>First service: 500 KM or 2 months (<Text style={styles.highlight}>{getServiceDate(2)}</Text>)</Text>
                             </View>
                             <View style={styles.stampSpace}></View>
 
                             <View style={styles.serviceItem}>
                                 <Text style={styles.serviceNumber}>2.</Text>
-                                <Text style={styles.serviceText}>Second free service: 2000 KM or 4 months (<Text style={styles.highlight}>{getServiceDate(4)}</Text>)</Text>
+                                <Text style={styles.serviceText}>Second service: 2000 KM or 4 months (<Text style={styles.highlight}>{getServiceDate(4)}</Text>)</Text>
                             </View>
                             <View style={styles.stampSpace}></View>
 
@@ -735,13 +744,13 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
 
                             <View style={styles.serviceItem}>
                                 <Text style={styles.serviceNumber}>4.</Text>
-                                <Text style={styles.serviceText}>Fourth Paid SERVICE 6000 KM OR 8 MONTHS (<Text style={styles.highlight}>{getServiceDate(8)}</Text>)</Text>
+                                <Text style={styles.serviceText}>Fourth SERVICE 6000 KM OR 8 MONTHS (<Text style={styles.highlight}>{getServiceDate(8)}</Text>)</Text>
                             </View>
                             <View style={styles.stampSpace}></View>
 
                             <View style={styles.serviceItem}>
                                 <Text style={styles.serviceNumber}>5.</Text>
-                                <Text style={styles.serviceText}>FIFTH Paid SERVICE 8000 KM OR 10 MONTHS (<Text style={styles.highlight}>{getServiceDate(10)}</Text>)</Text>
+                                <Text style={styles.serviceText}>FIFTH SERVICE 8000 KM OR 10 MONTHS (<Text style={styles.highlight}>{getServiceDate(10)}</Text>)</Text>
                             </View>
                             <View style={styles.stampSpace}></View>
                         </View>
