@@ -242,7 +242,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                 Shop no 2, Rahate complex, Jawahar Nagar,{"\n"}
                                 Akola 444001, Maharashtra
                             </Text>
-                            <Text style={styles.companyContact}>Contact: 8468857781 | Email: anitamotors@example.com</Text>
+                            <Text style={styles.companyContact}>Contact: 8468857781 | Email: anitamotors7@gmail.com</Text>
                             <Text style={styles.gstInfo}>GSTIN: 27CSZPR0818J1ZX | State: Maharashtra (30)</Text>
                         </View>
                         <View style={styles.headerRight}>
@@ -529,7 +529,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                 Shop no 2, Rahate complex, Jawahar Nagar,{"\n"}
                                 Akola 444001, Maharashtra
                             </Text>
-                            <Text style={styles.companyContact}>Contact: 8468857781 | Email: anitamotors@example.com</Text>
+                            <Text style={styles.companyContact}>Contact: 8468857781 | Email: anitamotors7@gmail.com</Text>
                             <Text style={styles.gstInfo}>GSTIN: 27CSZPR0818J1ZX | State: Maharashtra (30)</Text>
                         </View>
                         <View style={styles.headerRight}>
