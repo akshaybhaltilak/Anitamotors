@@ -13,6 +13,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
     const [editMode, setEditMode] = useState(true);
     const [savedBills, setSavedBills] = useState([]);
     const [hsnNumber, setHsnNumber] = useState('');
+    const [gstinNumber, setGstinNumber] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [searchCategory, setSearchCategory] = useState('customerName');
     const [showHistory, setShowHistory] = useState(false);
@@ -227,7 +228,6 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
         date.setMonth(date.getMonth() + months);
         return date.toLocaleDateString('en-IN');
     };
-
     const MyDocument = () => (
         <Document>
             <Page size="A4" style={styles.page}>
@@ -269,6 +269,12 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Invoice No:</Text>
                             <Text style={styles.infoValue}>{billData.billNumber || 'AM0003'}</Text>
+                        </View>
+                        <View style={styles.infoItem}>
+                            <Text style={styles.infoLabel}>GSTIN NO:</Text>
+                            <Text style={styles.infoValue}>
+                                {billData.gstinNumber || ''}
+                            </Text>
                         </View>
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Date:</Text>
@@ -459,22 +465,31 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                 <Text style={styles.serviceNumber}>1.</Text>
                                 <Text style={styles.serviceText}>First free service: 500 KM or 2 months (<Text style={styles.highlight}>{getServiceDate(2)}</Text>)</Text>
                             </View>
+                            <View style={styles.stampSpace}></View>
+
                             <View style={styles.serviceItem}>
                                 <Text style={styles.serviceNumber}>2.</Text>
                                 <Text style={styles.serviceText}>Second free service: 2000 KM or 4 months (<Text style={styles.highlight}>{getServiceDate(4)}</Text>)</Text>
                             </View>
+                            <View style={styles.stampSpace}></View>
+
                             <View style={styles.serviceItem}>
                                 <Text style={styles.serviceNumber}>3.</Text>
                                 <Text style={styles.serviceText}>Third service: 4000 KM or 6 months (<Text style={styles.highlight}>{getServiceDate(6)}</Text>)</Text>
                             </View>
+                            <View style={styles.stampSpace}></View>
+
                             <View style={styles.serviceItem}>
                                 <Text style={styles.serviceNumber}>4.</Text>
                                 <Text style={styles.serviceText}>Fourth Paid SERVICE 6000 KM OR 8 MONTHS (<Text style={styles.highlight}>{getServiceDate(8)}</Text>)</Text>
                             </View>
+                            <View style={styles.stampSpace}></View>
+
                             <View style={styles.serviceItem}>
                                 <Text style={styles.serviceNumber}>5.</Text>
                                 <Text style={styles.serviceText}>FIFTH Paid SERVICE 8000 KM OR 10 MONTHS (<Text style={styles.highlight}>{getServiceDate(10)}</Text>)</Text>
                             </View>
+                            <View style={styles.stampSpace}></View>
                         </View>
                     </View>
                 </View>
@@ -494,6 +509,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
             </Page>
         </Document>
     );
+
     // Bajaj PDF Document
     const BajajDocument = () => (
         <Document>
@@ -687,32 +703,41 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
 
                     {/* Service Schedule */}
                     <View style={styles.serviceContainer}>
-                        <View style={styles.boxHeader}>
-                            <Text style={styles.boxTitle}>SERVICE SCHEDULE:</Text>
-                        </View>
-                        <View style={styles.serviceContent}>
-                            <View style={styles.serviceItem}>
-                                <Text style={styles.serviceNumber}>1.</Text>
-                                <Text style={styles.serviceText}>First free service: 500 KM or 2 months (<Text style={styles.highlight}>{getServiceDate(2)}</Text>)</Text>
-                            </View>
-                            <View style={styles.serviceItem}>
-                                <Text style={styles.serviceNumber}>2.</Text>
-                                <Text style={styles.serviceText}>Second free service: 2000 KM or 4 months (<Text style={styles.highlight}>{getServiceDate(4)}</Text>)</Text>
-                            </View>
-                            <View style={styles.serviceItem}>
-                                <Text style={styles.serviceNumber}>3.</Text>
-                                <Text style={styles.serviceText}>Third service: 4000 KM or 6 months (<Text style={styles.highlight}>{getServiceDate(6)}</Text>)</Text>
-                            </View>
-                            <View style={styles.serviceItem}>
-                                <Text style={styles.serviceNumber}>4.</Text>
-                                <Text style={styles.serviceText}>Fourth Paid SERVICE 6000 KM OR 8 MONTHS (<Text style={styles.highlight}>{getServiceDate(8)}</Text>)</Text>
-                            </View>
-                            <View style={styles.serviceItem}>
-                                <Text style={styles.serviceNumber}>5.</Text>
-                                <Text style={styles.serviceText}>FIFTH Paid SERVICE 8000 KM OR 10 MONTHS (<Text style={styles.highlight}>{getServiceDate(10)}</Text>)</Text>
-                            </View>
-                        </View>
-                    </View>
+    <View style={styles.boxHeader}>
+        <Text style={styles.boxTitle}>SERVICE SCHEDULE:</Text>
+    </View>
+    <View style={styles.serviceContent}>
+        <View style={styles.serviceItem}>
+            <Text style={styles.serviceNumber}>1.</Text>
+            <Text style={styles.serviceText}>First free service: 500 KM or 2 months (<Text style={styles.highlight}>{getServiceDate(2)}</Text>)</Text>
+        </View>
+        <View style={styles.stampSpace}></View>
+        
+        <View style={styles.serviceItem}>
+            <Text style={styles.serviceNumber}>2.</Text>
+            <Text style={styles.serviceText}>Second free service: 2000 KM or 4 months (<Text style={styles.highlight}>{getServiceDate(4)}</Text>)</Text>
+        </View>
+        <View style={styles.stampSpace}></View>
+        
+        <View style={styles.serviceItem}>
+            <Text style={styles.serviceNumber}>3.</Text>
+            <Text style={styles.serviceText}>Third service: 4000 KM or 6 months (<Text style={styles.highlight}>{getServiceDate(6)}</Text>)</Text>
+        </View>
+        <View style={styles.stampSpace}></View>
+        
+        <View style={styles.serviceItem}>
+            <Text style={styles.serviceNumber}>4.</Text>
+            <Text style={styles.serviceText}>Fourth Paid SERVICE 6000 KM OR 8 MONTHS (<Text style={styles.highlight}>{getServiceDate(8)}</Text>)</Text>
+        </View>
+        <View style={styles.stampSpace}></View>
+        
+        <View style={styles.serviceItem}>
+            <Text style={styles.serviceNumber}>5.</Text>
+            <Text style={styles.serviceText}>FIFTH Paid SERVICE 8000 KM OR 10 MONTHS (<Text style={styles.highlight}>{getServiceDate(10)}</Text>)</Text>
+        </View>
+        <View style={styles.stampSpace}></View>
+    </View>
+</View>
                 </View>
 
                 {/* Battery Care Advice */}
@@ -730,7 +755,6 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
             </Page>
         </Document>
     );
-
     return (
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
@@ -772,6 +796,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                 <option value="controllerNo">Controller Number</option>
                                 <option value="date">Bill Date</option>
                                 <option value="billNumber">Invoice Number</option>
+                                <option value="gstinNumber">GSTIN NO.</option>
                             </select>
                         </div>
                         <button
@@ -791,6 +816,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                     <th className="p-2 border">Customer</th>
                                     <th className="p-2 border">Vehicle</th>
                                     <th className="p-2 border">Chassis No</th>
+                                    <th className="p-2 border">GSTIN</th>
                                     <th className="p-2 border">Amount</th>
                                     <th className="p-2 border">Actions</th>
                                 </tr>
@@ -803,6 +829,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                         <td className="p-2 border">{bill.customerName}</td>
                                         <td className="p-2 border">{bill.vehicleDetails?.name || 'Vehicle'}</td>
                                         <td className="p-2 border">{bill.chassisNo}</td>
+                                        <td className="p-2 border">{bill.gstinNumber || '-'}</td>
                                         <td className="p-2 border">₹{bill.finalAmount?.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
                                         <td className="p-2 border flex gap-1">
                                             <button
@@ -823,6 +850,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                                 onClick={() => {
                                                     setBillData(bill);
                                                     setHsnNumber(bill.hsnNumber || '');
+                                                    setGstinNumber(bill.gstinNumber || '');
                                                     setEditMode(false);
                                                 }}
                                                 className="px-2 py-1 bg-green-500 text-white rounded text-xs"
@@ -898,6 +926,20 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                             value={hsnNumber}
                             onChange={(e) => setHsnNumber(e.target.value)}
                             placeholder="Enter HSN Number"
+                            className="w-full px-3 py-2 border border-gray-300 rounded"
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label htmlFor="gstinNumber" className="block text-gray-700 font-semibold mb-2">
+                            GSTIN Number
+                        </label>
+                        <input
+                            type="text"
+                            id="gstinNumber"
+                            value={gstinNumber}
+                            onChange={(e) => setGstinNumber(e.target.value)}
+                            placeholder="Enter GSTIN Number"
                             className="w-full px-3 py-2 border border-gray-300 rounded"
                         />
                     </div>
@@ -1016,6 +1058,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                     <p className="font-semibold">{billData.customerName}</p>
                                     <p>Contact: {billData.customerContact || '-'}</p>
                                     <p>Address: {billData.customerAddress || '-'}</p>
+                                    {billData.gstinNumber && <p>GSTIN: {billData.gstinNumber}</p>}
                                 </div>
                                 <div>
                                     <h3 className="font-bold border-b pb-1">VEHICLE DETAILS:</h3>
@@ -1108,12 +1151,9 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                         <li>➢ CONTROLLER AND MOTOR COMPLETE 1 YEAR GUARANTEE. </li>
                                         <li>➢ NO CHARGER GUARANTEE/ WARRANTY. </li>
                                         <li>➢ NO BULGING WARRANTY FOR BATTERY.</li>
-
                                     </ul>
                                 </div>
                             </div>
-
-
 
                             <div className="text-center mt-8 text-sm">
                                 <p>Thank you for your business!</p>
@@ -1147,16 +1187,8 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                 <p className="font-semibold">{billData.customerName}</p>
                                 <p>Contact: {billData.customerContact || '-'}</p>
                                 <p>Address: {billData.customerAddress || '-'}</p>
+                                {billData.gstinNumber && <p>GSTIN: {billData.gstinNumber}</p>}
                             </div>
-                            {/* 
-                            <div className="mb-6">
-                                <h3 className="font-bold border-b pb-1">VEHICLE DETAILS:</h3>
-                                <p className="font-semibold">{vehicle.name} {vehicle.model}</p>
-                                <p>Color: {vehicle.color || 'N/A'}</p>
-                                <p>Variant: {vehicle.variant || 'Standard'}</p>
-                                <p>Motor No: {billData.motorNo}</p>
-                                <p>Chassis No: {billData.chassisNo}</p>
-                            </div> */}
 
                             <div className="mb-6">
                                 <table className="w-full border-collapse">
@@ -1230,8 +1262,6 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                                     </ul>
                                 </div>
                             </div>
-
-
                         </>
                     )}
                 </div>
@@ -1252,8 +1282,6 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                         Bajaj Format
                     </button>
                 </div>
-
-
 
                 <div className="flex gap-2">
                     {editMode ? (
@@ -1780,6 +1808,15 @@ const styles = StyleSheet.create({
         fontSize: 7,
         color: '#888888',
         fontStyle: 'italic'
+    },
+    stampSpace: {
+        height: 65,
+        marginBottom: 5,
+        marginTop: 5,
+        borderWidth: 1,
+        borderColor: '#e0e0e0',
+        borderStyle: 'dashed',
+        borderRadius: 4,
     }
 });
 
