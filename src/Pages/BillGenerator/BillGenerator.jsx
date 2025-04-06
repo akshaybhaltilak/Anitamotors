@@ -190,6 +190,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
             sgst,
             finalAmount,
             hsnNumber,
+            gstinNumber,
             createdAt: new Date().toISOString()
         };
 
@@ -220,6 +221,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
     const handleEditBill = (bill) => {
         setBillData(bill);
         setHsnNumber(bill.hsnNumber || '');
+        setGstinNumber(bill.gstinNumber || '');
         setEditMode(true);
     };
 
@@ -273,7 +275,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>GSTIN NO:</Text>
                             <Text style={styles.infoValue}>
-                                {billData.gstinNumber || ''}
+                                {gstinNumber || '-'}
                             </Text>
                         </View>
                         <View style={styles.infoItem}>
@@ -549,6 +551,7 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                             <Text style={styles.infoLabel}>Invoice No:</Text>
                             <Text style={styles.infoValue}>{billData.billNumber}</Text>
                         </View>
+                        
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Date:</Text>
                             <Text style={styles.infoValue}>{new Date(billData.date).toLocaleDateString('en-IN')}</Text>
@@ -703,41 +706,41 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
 
                     {/* Service Schedule */}
                     <View style={styles.serviceContainer}>
-    <View style={styles.boxHeader}>
-        <Text style={styles.boxTitle}>SERVICE SCHEDULE:</Text>
-    </View>
-    <View style={styles.serviceContent}>
-        <View style={styles.serviceItem}>
-            <Text style={styles.serviceNumber}>1.</Text>
-            <Text style={styles.serviceText}>First free service: 500 KM or 2 months (<Text style={styles.highlight}>{getServiceDate(2)}</Text>)</Text>
-        </View>
-        <View style={styles.stampSpace}></View>
-        
-        <View style={styles.serviceItem}>
-            <Text style={styles.serviceNumber}>2.</Text>
-            <Text style={styles.serviceText}>Second free service: 2000 KM or 4 months (<Text style={styles.highlight}>{getServiceDate(4)}</Text>)</Text>
-        </View>
-        <View style={styles.stampSpace}></View>
-        
-        <View style={styles.serviceItem}>
-            <Text style={styles.serviceNumber}>3.</Text>
-            <Text style={styles.serviceText}>Third service: 4000 KM or 6 months (<Text style={styles.highlight}>{getServiceDate(6)}</Text>)</Text>
-        </View>
-        <View style={styles.stampSpace}></View>
-        
-        <View style={styles.serviceItem}>
-            <Text style={styles.serviceNumber}>4.</Text>
-            <Text style={styles.serviceText}>Fourth Paid SERVICE 6000 KM OR 8 MONTHS (<Text style={styles.highlight}>{getServiceDate(8)}</Text>)</Text>
-        </View>
-        <View style={styles.stampSpace}></View>
-        
-        <View style={styles.serviceItem}>
-            <Text style={styles.serviceNumber}>5.</Text>
-            <Text style={styles.serviceText}>FIFTH Paid SERVICE 8000 KM OR 10 MONTHS (<Text style={styles.highlight}>{getServiceDate(10)}</Text>)</Text>
-        </View>
-        <View style={styles.stampSpace}></View>
-    </View>
-</View>
+                        <View style={styles.boxHeader}>
+                            <Text style={styles.boxTitle}>SERVICE SCHEDULE:</Text>
+                        </View>
+                        <View style={styles.serviceContent}>
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>1.</Text>
+                                <Text style={styles.serviceText}>First free service: 500 KM or 2 months (<Text style={styles.highlight}>{getServiceDate(2)}</Text>)</Text>
+                            </View>
+                            <View style={styles.stampSpace}></View>
+
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>2.</Text>
+                                <Text style={styles.serviceText}>Second free service: 2000 KM or 4 months (<Text style={styles.highlight}>{getServiceDate(4)}</Text>)</Text>
+                            </View>
+                            <View style={styles.stampSpace}></View>
+
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>3.</Text>
+                                <Text style={styles.serviceText}>Third service: 4000 KM or 6 months (<Text style={styles.highlight}>{getServiceDate(6)}</Text>)</Text>
+                            </View>
+                            <View style={styles.stampSpace}></View>
+
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>4.</Text>
+                                <Text style={styles.serviceText}>Fourth Paid SERVICE 6000 KM OR 8 MONTHS (<Text style={styles.highlight}>{getServiceDate(8)}</Text>)</Text>
+                            </View>
+                            <View style={styles.stampSpace}></View>
+
+                            <View style={styles.serviceItem}>
+                                <Text style={styles.serviceNumber}>5.</Text>
+                                <Text style={styles.serviceText}>FIFTH Paid SERVICE 8000 KM OR 10 MONTHS (<Text style={styles.highlight}>{getServiceDate(10)}</Text>)</Text>
+                            </View>
+                            <View style={styles.stampSpace}></View>
+                        </View>
+                    </View>
                 </View>
 
                 {/* Battery Care Advice */}
