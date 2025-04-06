@@ -551,7 +551,12 @@ const BillGenerator = ({ vehicle, initialBillData, onCompleteSale, onCancel }) =
                             <Text style={styles.infoLabel}>Invoice No:</Text>
                             <Text style={styles.infoValue}>{billData.billNumber}</Text>
                         </View>
-                        
+                        <View style={styles.infoItem}> 
+                            <Text style={styles.infoLabel}>GSTIN NO:</Text>
+                            <Text style={styles.infoValue}>
+                                {gstinNumber || '-'}
+                            </Text>
+                        </View>
                         <View style={styles.infoItem}>
                             <Text style={styles.infoLabel}>Date:</Text>
                             <Text style={styles.infoValue}>{new Date(billData.date).toLocaleDateString('en-IN')}</Text>
@@ -1390,6 +1395,7 @@ const styles = StyleSheet.create({
         color: '#555555',
         marginBottom: 2
     },
+    
     companyContact: {
         fontSize: 9,
         color: '#555555',
