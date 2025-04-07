@@ -70,15 +70,15 @@ const Footer = () => {
             <div className="space-y-3 mb-6">
               <div className="flex items-start">
                 <MapPin size={16} className="mr-2 mt-1 text-blue-300" />
-                <span className="text-sm text-blue-100">123 EV Lane, Greenville, India - 400001</span>
+                <span className="text-sm text-blue-100">Shop no 2, Rahate complex, jawahar nagar, Akola 444001</span>
               </div>
               <div className="flex items-center">
                 <Phone size={16} className="mr-2 text-blue-300" />
-                <a href="tel:+919876543210" className="text-sm text-blue-100 hover:text-white">+91 9876543210</a>
+                <a href="tel:+919876543210" className="text-sm text-blue-100 hover:text-white">+91 8468857781</a>
               </div>
               <div className="flex items-center">
                 <Mail size={16} className="mr-2 text-blue-300" />
-                <a href="mailto:info@anitamotors.com" className="text-sm text-blue-100 hover:text-white">info@anitamotors.com</a>
+                <a href="mailto:info@anitamotors.com" className="text-sm text-blue-100 hover:text-white">anitamotors7@gmail.com</a>
               </div>
             </div>
 

@@ -281,12 +281,7 @@ const ExpenseManagement = () => {
             >
               Daily Expenses
             </button>
-            <button 
-              onClick={() => setActiveTab('workerPayments')}
-              className={`py-2 px-6 rounded-t-lg ${activeTab === 'workerPayments' ? 'bg-white font-bold' : 'bg-gray-200'}`}
-            >
-              Worker Payments
-            </button>
+            
           </div>
 
           <div className="bg-white p-4 rounded-b-lg rounded-tr-lg shadow">
@@ -405,129 +400,9 @@ const ExpenseManagement = () => {
               </>
             ) : (
               <>
-                <form onSubmit={handleWorkerSubmit} className="mb-6 p-4 border border-gray-200 rounded-lg">
-                  <h2 className="text-xl font-bold mb-4">{editMode ? 'Edit Worker Payment' : 'Add Worker Payment'}</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Worker Name*</label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={workerForm.name}
-                        onChange={handleWorkerChange}
-                        className="w-full border border-gray-300 p-2 rounded"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Payment Given (₹)</label>
-                      <input
-                        type="number"
-                        name="paymentGiven"
-                        value={workerForm.paymentGiven}
-                        onChange={handleWorkerChange}
-                        className="w-full border border-gray-300 p-2 rounded"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Payment Due (₹)</label>
-                      <input
-                        type="number"
-                        name="paymentDue"
-                        value={workerForm.paymentDue}
-                        onChange={handleWorkerChange}
-                        className="w-full border border-gray-300 p-2 rounded"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Work Description*</label>
-                      <input
-                        type="text"
-                        name="workDescription"
-                        value={workerForm.workDescription}
-                        onChange={handleWorkerChange}
-                        className="w-full border border-gray-300 p-2 rounded"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                      <input
-                        type="date"
-                        name="date"
-                        value={workerForm.date}
-                        onChange={handleWorkerChange}
-                        className="w-full border border-gray-300 p-2 rounded"
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-4 flex space-x-2">
-                    <button
-                      type="submit"
-                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    >
-                      {editMode ? 'Update Worker Payment' : 'Add Worker Payment'}
-                    </button>
-                    {editMode && (
-                      <button
-                        type="button"
-                        onClick={resetWorkerForm}
-                        className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                      >
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                </form>
+                
 
-                <div className="mt-6">
-                  <h2 className="text-xl font-bold mb-4">Worker Payments for {new Date(filterDate).toLocaleDateString('en-IN')}</h2>
-                  {isLoading ? (
-                    <p className="text-center py-4">Loading worker payments...</p>
-                  ) : filteredWorkers.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full bg-white border border-gray-200">
-                        <thead className="bg-gray-100">
-                          <tr>
-                            <th className="px-4 py-2 text-left text-gray-700">Worker Name</th>
-                            <th className="px-4 py-2 text-left text-gray-700">Work Description</th>
-                            <th className="px-4 py-2 text-left text-gray-700">Payment Given</th>
-                            <th className="px-4 py-2 text-left text-gray-700">Payment Due</th>
-                            <th className="px-4 py-2 text-center text-gray-700">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredWorkers.map(worker => (
-                            <tr key={worker.id} className="border-b border-gray-200 hover:bg-gray-50">
-                              <td className="px-4 py-3 font-medium">{worker.name}</td>
-                              <td className="px-4 py-3">{worker.workDescription}</td>
-                              <td className="px-4 py-3">{formatCurrency(worker.paymentGiven)}</td>
-                              <td className={`px-4 py-3 ${worker.paymentDue > 0 ? 'text-red-600 font-medium' : ''}`}>
-                                {formatCurrency(worker.paymentDue)}
-                              </td>
-                              <td className="px-4 py-3 text-center">
-                                <button 
-                                  onClick={() => handleEditWorker(worker)}
-                                  className="text-blue-600 hover:text-blue-800 mr-2"
-                                >
-                                  Edit
-                                </button>
-                                <button 
-                                  onClick={() => handleDeleteWorker(worker.id)}
-                                  className="text-red-600 hover:text-red-800"
-                                >
-                                  Delete
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="text-center py-4 bg-gray-50 rounded">No worker payments found for this date</p>
-                  )}
-                </div>
+                
               </>
             )}
           </div>
