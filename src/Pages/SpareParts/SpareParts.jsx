@@ -73,17 +73,22 @@ export default function SparePartsManagement() {
   }, []);
 
   // Filter parts based on search, category, and low stock
-  useEffect(() => {
+ useEffect(() => {
     let result = [...parts];
     
     // Search filter
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(part => 
-        part.name.toLowerCase().includes(query) || 
-        part.partNumber.toLowerCase().includes(query) ||
-        part.manufacturer?.toLowerCase().includes(query)
-      );
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(part => {
+        // Safely check all searchable fields with null/undefined checks
+        const nameMatch = part.name ? part.name.toLowerCase().includes(query) : false;
+        const partNumberMatch = part.partNumber ? part.partNumber.toLowerCase().includes(query) : false;
+        const manufacturerMatch = part.manufacturer ? part.manufacturer.toLowerCase().includes(query) : false;
+        const locationMatch = part.location ? part.location.toLowerCase().includes(query) : false;
+        
+        // Return true if any field matches
+        return nameMatch || partNumberMatch || manufacturerMatch || locationMatch;
+      });
     }
     
     // Category filter
