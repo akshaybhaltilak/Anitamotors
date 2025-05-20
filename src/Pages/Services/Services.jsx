@@ -29,6 +29,7 @@ function Servicing() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showPartsModal, setShowPartsModal] = useState(false);
+  const [searchPart, setSearchPart] = useState("");
 
   // Fetch services data from Firebase on component mount
   useEffect(() => {
@@ -59,13 +60,17 @@ function Servicing() {
     return () => unsubscribe();
   }, []);
 
+  const filteredSpareParts = spareParts.filter(part =>
+    part.name && part.name.toLowerCase().includes(searchPart.toLowerCase())
+  );
+
   // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name === 'serviceCategory') {
       let updatedPaymentStatus = formData.paymentStatus;
-      
+
       // If service is free, automatically set payment status to 'Not Required'
       if (value === 'Free') {
         updatedPaymentStatus = 'Not Required';
@@ -73,7 +78,7 @@ function Servicing() {
         // If changing from Free to something else, reset payment status to Pending
         updatedPaymentStatus = 'Pending';
       }
-      
+
       setFormData((prevState) => ({
         ...prevState,
         [name]: value,
@@ -100,10 +105,10 @@ function Servicing() {
           const partRef = ref(database, `spareParts/${part.id}`);
           const snapshot = await get(partRef);
           const currentPart = snapshot.val();
-          
+
           if (currentPart) {
             const newQuantity = currentPart.quantity - part.quantity;
-            
+
             if (newQuantity >= 0) {
               await update(partRef, {
                 quantity: newQuantity
@@ -224,7 +229,7 @@ function Servicing() {
   // Handle spare part selection
   const handleAddPart = (part) => {
     const existingPartIndex = selectedParts.findIndex(p => p.id === part.id);
-    
+
     if (existingPartIndex >= 0) {
       // Part already added, increase quantity
       const updatedParts = [...selectedParts];
@@ -390,7 +395,7 @@ function Servicing() {
                       <option value="Other">Other</option>
                     </select>
                   </div> */}
-                  
+
                   <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-medium mb-1">
                       Service Category*
@@ -450,7 +455,7 @@ function Servicing() {
                       Add Parts
                     </button>
                   </div>
-                  
+
                   {selectedParts.length > 0 ? (
                     <div className="bg-gray-50 rounded-md p-3 border border-gray-200">
                       <table className="min-w-full divide-y divide-gray-200">
@@ -513,7 +518,7 @@ function Servicing() {
                 {formData.serviceCategory !== 'Free' && (
                   <div className="border-t border-gray-200 pt-4 mt-4">
                     <h3 className="font-medium text-gray-700 mb-3">Payment Details</h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-medium mb-1">
@@ -530,7 +535,7 @@ function Servicing() {
                           <option value="Partially Paid">Partially Paid</option>
                         </select>
                       </div>
-                      
+
                       <div className="mb-4">
                         <label className="block text-gray-700 text-sm font-medium mb-1">
                           Payment Method
@@ -549,7 +554,7 @@ function Servicing() {
                         </select>
                       </div>
                     </div>
-                    
+
                     <div className="mb-4">
                       <label className="block text-gray-700 text-sm font-medium mb-1">
                         Service Charge Amount (₹)
@@ -564,14 +569,14 @@ function Servicing() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-                    
+
                     <div className="bg-blue-50 p-3 rounded-md flex justify-between items-center">
                       <div>
                         <p className="text-sm font-medium text-gray-700">Total Amount</p>
                         <p className="text-gray-500 text-xs">Service charge + parts</p>
                       </div>
                       <div className="text-xl font-semibold text-blue-800">
-                      ₹{(parseFloat(formData.paymentAmount || 0) + calculateTotalPartsCost()).toFixed(2)}
+                        ₹{(parseFloat(formData.paymentAmount || 0) + calculateTotalPartsCost()).toFixed(2)}
                       </div>
                     </div>
                   </div>
@@ -609,11 +614,10 @@ function Servicing() {
                   <button
                     type="submit"
                     disabled={submitLoading}
-                    className={`px-6 py-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
-                      submitLoading 
-                        ? 'bg-blue-400 cursor-not-allowed' 
-                        : 'bg-blue-600 hover:bg-blue-700 transform hover:-translate-y-1'
-                    }`}
+                    className={`px-6 py-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${submitLoading
+                      ? 'bg-blue-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 transform hover:-translate-y-1'
+                      }`}
                   >
                     {submitLoading ? (
                       <span className="flex items-center">
@@ -647,7 +651,7 @@ function Servicing() {
                   <p className="text-2xl font-bold">{services.length}</p>
                 </div>
                 <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100 transform transition-transform hover:scale-105">
-                <p className="text-sm text-yellow-600 font-medium">Pending</p>
+                  <p className="text-sm text-yellow-600 font-medium">Pending</p>
                   <p className="text-2xl font-bold">{services.filter(s => s.status === 'Pending').length}</p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg border border-green-100 transform transition-transform hover:scale-105">
@@ -676,41 +680,37 @@ function Servicing() {
                 <div className="flex space-x-2">
                   <button
                     onClick={() => setFilter('all')}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                      filter === 'all'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors ${filter === 'all'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
                   >
                     All
                   </button>
                   <button
                     onClick={() => setFilter('Pending')}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                      filter === 'Pending'
-                        ? 'bg-yellow-500 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors ${filter === 'Pending'
+                      ? 'bg-yellow-500 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
                   >
                     Pending
                   </button>
                   <button
                     onClick={() => setFilter('In Progress')}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                      filter === 'In Progress'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors ${filter === 'In Progress'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
                   >
                     In Progress
                   </button>
                   <button
                     onClick={() => setFilter('Completed')}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                      filter === 'Completed'
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors ${filter === 'Completed'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
                   >
                     Completed
                   </button>
@@ -765,13 +765,12 @@ function Servicing() {
                                 {service.serviceType}
                               </span>
                               {service.serviceCategory && (
-                                <span className={`mt-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                  service.serviceCategory === 'Free' 
-                                    ? 'bg-green-100 text-green-800'
-                                    : service.serviceCategory === 'Instant'
-                                      ? 'bg-purple-100 text-purple-800'
-                                      : 'bg-yellow-100 text-yellow-800'
-                                }`}>
+                                <span className={`mt-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${service.serviceCategory === 'Free'
+                                  ? 'bg-green-100 text-green-800'
+                                  : service.serviceCategory === 'Instant'
+                                    ? 'bg-purple-100 text-purple-800'
+                                    : 'bg-yellow-100 text-yellow-800'
+                                  }`}>
                                   {service.serviceCategory}
                                 </span>
                               )}
@@ -780,15 +779,14 @@ function Servicing() {
                           <td className="px-4 py-3 text-sm text-gray-900">{service.date}</td>
                           <td className="px-4 py-3 text-sm">
                             <span
-                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                service.status === 'Pending'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : service.status === 'In Progress'
+                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${service.status === 'Pending'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : service.status === 'In Progress'
                                   ? 'bg-blue-100 text-blue-800'
                                   : service.status === 'Completed'
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-red-100 text-red-800'
-                              }`}
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-red-100 text-red-800'
+                                }`}
                             >
                               {service.status}
                             </span>
@@ -799,19 +797,18 @@ function Servicing() {
                             ) : (
                               <div>
                                 <span
-                                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                    service.paymentStatus === 'Completed'
-                                      ? 'bg-green-100 text-green-800'
-                                      : service.paymentStatus === 'Partially Paid'
+                                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${service.paymentStatus === 'Completed'
+                                    ? 'bg-green-100 text-green-800'
+                                    : service.paymentStatus === 'Partially Paid'
                                       ? 'bg-yellow-100 text-yellow-800'
                                       : 'bg-red-100 text-red-800'
-                                  }`}
+                                    }`}
                                 >
                                   {service.paymentStatus}
                                 </span>
                                 <p className="text-xs text-gray-500 mt-1">
-                                  ${((parseFloat(service.paymentAmount) || 0) + 
-                                    (service.spareParts ? service.spareParts.reduce((total, part) => 
+                                  ${((parseFloat(service.paymentAmount) || 0) +
+                                    (service.spareParts ? service.spareParts.reduce((total, part) =>
                                       total + (part.price * part.quantity), 0) : 0)).toFixed(2)}
                                 </p>
                               </div>
@@ -841,10 +838,10 @@ function Servicing() {
                                 <button
                                   className="text-gray-600 hover:text-gray-900 focus:outline-none"
                                   onClick={() => {
-                                    const newStatus = service.status === 'Pending' 
-                                      ? 'In Progress' 
-                                      : service.status === 'In Progress' 
-                                        ? 'Completed' 
+                                    const newStatus = service.status === 'Pending'
+                                      ? 'In Progress'
+                                      : service.status === 'In Progress'
+                                        ? 'Completed'
                                         : 'Pending';
                                     handleStatusChange(service.id, newStatus);
                                   }}
@@ -884,10 +881,12 @@ function Servicing() {
                       <input
                         type="text"
                         placeholder="Search parts..."
+                        value={searchPart}
+                        onChange={e => setSearchPart(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
                       />
-                      
-                      {spareParts.length === 0 ? (
+
+                      {filteredSpareParts.length === 0 ? (
                         <div className="text-center py-4">
                           <p className="text-gray-500">No spare parts available</p>
                         </div>
@@ -903,7 +902,7 @@ function Servicing() {
                               </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                              {spareParts.map((part) => (
+                              {filteredSpareParts.map((part) => (
                                 <tr key={part.id}>
                                   <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{part.name}</td>
                                   <td className="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-500">{part.quantity}</td>
@@ -912,11 +911,10 @@ function Servicing() {
                                     <button
                                       onClick={() => handleAddPart(part)}
                                       disabled={part.quantity <= 0}
-                                      className={`px-3 py-1 rounded-md text-white ${
-                                        part.quantity <= 0
-                                          ? 'bg-gray-300 cursor-not-allowed'
-                                          : 'bg-blue-600 hover:bg-blue-700'
-                                      }`}
+                                      className={`px-3 py-1 rounded-md text-white ${part.quantity <= 0
+                                        ? 'bg-gray-300 cursor-not-allowed'
+                                        : 'bg-blue-600 hover:bg-blue-700'
+                                        }`}
                                     >
                                       Add
                                     </button>
