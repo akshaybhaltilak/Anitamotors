@@ -399,7 +399,7 @@ function Servicing() {
                       required
                     />
                   </div>
-                  <div className="mb-4">
+                  {/* <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-medium mb-1">
                       Email
                     </label>
@@ -410,11 +410,11 @@ function Servicing() {
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="mb-4">
+                  {/* <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-medium mb-1">
                       Bike Model
                     </label>
@@ -425,7 +425,7 @@ function Servicing() {
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                  </div>
+                  </div> */}
                   <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-medium mb-1">
                       Battery Health (%)
@@ -459,7 +459,7 @@ function Servicing() {
                       <option value="Instant">Instant</option>
                     </select>
                   </div>
-                  <div className="mb-4">
+                  {/* <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-medium mb-1">
                       Service Type
                     </label>
@@ -476,7 +476,7 @@ function Servicing() {
                       <option value="Electrical Service">Electrical Service</option>
                       <option value="Other">Other</option>
                     </select>
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className="mb-4">
@@ -854,12 +854,12 @@ function Servicing() {
                               </svg>
                               {service.phone}
                             </div>
-                            <div className="flex items-center">
+                            {/* <div className="flex items-center">
                               <svg className="h-4 w-4 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
                               </svg>
                               {service.bikeModel || 'Not specified'}
-                            </div>
+                            </div> */}
                             <div className="flex items-center">
                               <svg className="h-4 w-4 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
