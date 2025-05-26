@@ -7,6 +7,8 @@ function Servicing() {
   const [spareParts, setSpareParts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedParts, setSelectedParts] = useState([]);
+  const [originalParts, setOriginalParts] = useState([]);
+
   const [formData, setFormData] = useState({
     customerName: '',
     phone: '',
@@ -14,14 +16,14 @@ function Servicing() {
     bikeModel: '',
     batteryHealth: '',
     serviceType: 'Regular Maintenance',
-    serviceCategory: 'Paid', // New field: Free, Paid, or Instant
-    paymentStatus: 'Pending', // New field
-    paymentAmount: 0, // New field
-    paymentMethod: 'Cash', // New field
+    serviceCategory: 'Paid',
+    paymentStatus: 'Pending',
+    paymentAmount: 0,
+    paymentMethod: 'Cash',
     description: '',
-    date: new Date().toLocaleDateString('en-CA'), // YYYY-MM-DD format
+    date: new Date().toLocaleDateString('en-CA'),
     status: 'Pending',
-    spareParts: [], // New field to store selected spare parts
+    spareParts: [],
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -29,7 +31,9 @@ function Servicing() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showPartsModal, setShowPartsModal] = useState(false);
-  const [searchPart, setSearchPart] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [partsSearchTerm, setPartsSearchTerm] = useState('');
+  const [expandedService, setExpandedService] = useState(null);
 
   // Fetch services data from Firebase on component mount
   useEffect(() => {
@@ -37,14 +41,10 @@ function Servicing() {
     const unsubscribe = onValue(servicesRef, (snapshot) => {
       const data = snapshot.val() || {};
       const servicesList = Object.keys(data).map((id) => ({ id, ...data[id] }));
-
-      // Sort by date (newest first)
       servicesList.sort((a, b) => new Date(b.date) - new Date(a.date));
-
       setServices(servicesList);
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -56,13 +56,8 @@ function Servicing() {
       const sparePartsList = Object.keys(data).map((id) => ({ id, ...data[id] }));
       setSpareParts(sparePartsList);
     });
-
     return () => unsubscribe();
   }, []);
-
-  const filteredSpareParts = spareParts.filter(part =>
-    part.name && part.name.toLowerCase().includes(searchPart.toLowerCase())
-  );
 
   // Handle form input changes
   const handleChange = (e) => {
@@ -71,11 +66,9 @@ function Servicing() {
     if (name === 'serviceCategory') {
       let updatedPaymentStatus = formData.paymentStatus;
 
-      // If service is free, automatically set payment status to 'Not Required'
       if (value === 'Free') {
         updatedPaymentStatus = 'Not Required';
       } else if (formData.serviceCategory === 'Free') {
-        // If changing from Free to something else, reset payment status to Pending
         updatedPaymentStatus = 'Pending';
       }
 
@@ -93,34 +86,51 @@ function Servicing() {
     }
   };
 
+  // Restore inventory for original parts
+  const restoreOriginalPartsInventory = async () => {
+    if (originalParts.length > 0) {
+      for (const part of originalParts) {
+        const partRef = ref(database, `spareParts/${part.id}`);
+        const snapshot = await get(partRef);
+        const currentPart = snapshot.val();
+
+        if (currentPart) {
+          const restoredQuantity = currentPart.quantity + part.quantity;
+          await update(partRef, {
+            quantity: restoredQuantity
+          });
+        }
+      }
+    }
+  };
+
+  // Deduct inventory for new parts
+  const deductPartsInventory = async (parts) => {
+    for (const part of parts) {
+      const partRef = ref(database, `spareParts/${part.id}`);
+      const snapshot = await get(partRef);
+      const currentPart = snapshot.val();
+
+      if (currentPart) {
+        const newQuantity = currentPart.quantity - part.quantity;
+
+        if (newQuantity < 0) {
+          throw new Error(`Not enough quantity for ${part.name}. Available: ${currentPart.quantity}, Required: ${part.quantity}`);
+        }
+
+        await update(partRef, {
+          quantity: newQuantity
+        });
+      }
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitLoading(true);
 
     try {
-      // Update spare parts inventory quantities
-      if (selectedParts.length > 0) {
-        for (const part of selectedParts) {
-          const partRef = ref(database, `spareParts/${part.id}`);
-          const snapshot = await get(partRef);
-          const currentPart = snapshot.val();
-
-          if (currentPart) {
-            const newQuantity = currentPart.quantity - part.quantity;
-
-            if (newQuantity >= 0) {
-              await update(partRef, {
-                quantity: newQuantity
-              });
-            } else {
-              throw new Error(`Not enough quantity for ${part.name}`);
-            }
-          }
-        }
-      }
-
-      // Prepare service data with selected parts
       const serviceData = {
         ...formData,
         spareParts: selectedParts.map(part => ({
@@ -132,12 +142,17 @@ function Servicing() {
       };
 
       if (isEditing && editId) {
-        // Update existing record
+        await restoreOriginalPartsInventory();
+        if (selectedParts.length > 0) {
+          await deductPartsInventory(selectedParts);
+        }
         const serviceRef = ref(database, `bikeServices/${editId}`);
         await update(serviceRef, serviceData);
         showSuccessMessage('Service updated successfully!');
       } else {
-        // Add new record
+        if (selectedParts.length > 0) {
+          await deductPartsInventory(selectedParts);
+        }
         const servicesRef = ref(database, 'bikeServices');
         await push(servicesRef, {
           ...serviceData,
@@ -181,6 +196,7 @@ function Servicing() {
       spareParts: [],
     });
     setSelectedParts([]);
+    setOriginalParts([]);
     setIsEditing(false);
     setEditId(null);
   };
@@ -190,10 +206,29 @@ function Servicing() {
     if (window.confirm('Are you sure you want to delete this service record?')) {
       try {
         const serviceRef = ref(database, `bikeServices/${id}`);
+        const snapshot = await get(serviceRef);
+        const serviceData = snapshot.val();
+
+        if (serviceData && serviceData.spareParts) {
+          for (const part of serviceData.spareParts) {
+            const partRef = ref(database, `spareParts/${part.id}`);
+            const partSnapshot = await get(partRef);
+            const currentPart = partSnapshot.val();
+
+            if (currentPart) {
+              const restoredQuantity = currentPart.quantity + part.quantity;
+              await update(partRef, {
+                quantity: restoredQuantity
+              });
+            }
+          }
+        }
+
         await remove(serviceRef);
-        showSuccessMessage('Service record deleted');
+        showSuccessMessage('Service record deleted and inventory restored');
       } catch (error) {
         console.error('Error deleting service:', error);
+        alert('Error deleting service record');
       }
     }
   };
@@ -205,10 +240,9 @@ function Servicing() {
       spareParts: service.spareParts || [],
     });
     setSelectedParts(service.spareParts || []);
+    setOriginalParts(service.spareParts || []);
     setIsEditing(true);
     setEditId(service.id);
-
-    // Scroll to form
     window.scrollTo({
       top: 0,
       behavior: 'smooth',
@@ -231,21 +265,22 @@ function Servicing() {
     const existingPartIndex = selectedParts.findIndex(p => p.id === part.id);
 
     if (existingPartIndex >= 0) {
-      // Part already added, increase quantity
       const updatedParts = [...selectedParts];
       updatedParts[existingPartIndex].quantity += 1;
       setSelectedParts(updatedParts);
     } else {
-      // Add new part with quantity 1
       setSelectedParts([...selectedParts, { ...part, quantity: 1 }]);
     }
   };
 
   // Handle spare part quantity change
   const handlePartQuantityChange = (partId, newQuantity) => {
+    const quantity = parseInt(newQuantity) || 0;
+    if (quantity < 0) return;
+
     const updatedParts = selectedParts.map(part => {
       if (part.id === partId) {
-        return { ...part, quantity: parseInt(newQuantity) || 0 };
+        return { ...part, quantity: quantity };
       }
       return part;
     });
@@ -264,15 +299,49 @@ function Servicing() {
     }, 0);
   };
 
-  // Filter services based on status
-  const filteredServices =
-    filter === 'all'
-      ? services
-      : services.filter((service) => service.status === filter);
+  // Get available quantity for a part
+  const getAvailableQuantity = (partId) => {
+    const sparePartData = spareParts.find(p => p.id === partId);
+    if (!sparePartData) return 0;
+
+    let availableStock = sparePartData.quantity;
+    if (isEditing) {
+      const originalPart = originalParts.find(p => p.id === partId);
+      if (originalPart) {
+        availableStock += originalPart.quantity;
+      }
+    }
+
+    return availableStock;
+  };
+
+  // Filter services based on status and search term
+  const filteredServices = services.filter((service) => {
+    const matchesFilter = filter === 'all' || service.status === filter;
+    const matchesSearch = service.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  // Toggle service card expansion
+  const toggleServiceExpansion = (id) => {
+    setExpandedService(expandedService === id ? null : id);
+  };
+
+  // Update the filteredSpareParts logic to make search more robust
+  const filteredSpareParts = spareParts.filter(part => {
+    const searchLower = partsSearchTerm.toLowerCase().trim();
+    if (!searchLower) return true; // Show all parts if search is empty
+
+    return (
+      part.name?.toLowerCase().includes(searchLower) ||
+      part.description?.toLowerCase().includes(searchLower) ||
+      part.id?.toLowerCase().includes(searchLower)
+    );
+  });
 
   return (
     <div className="bg-gray-100 min-h-screen pb-10">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Service Form */}
           <div className="lg:col-span-1">
@@ -330,7 +399,7 @@ function Servicing() {
                       required
                     />
                   </div>
-                  {/* <div className="mb-4">
+                  <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-medium mb-1">
                       Email
                     </label>
@@ -341,61 +410,39 @@ function Servicing() {
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                  </div> */}
-                </div>
-
-                {/* <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-medium mb-1">
-                    Bike Model*
-                  </label>
-                  <input
-                    type="text"
-                    name="bikeModel"
-                    value={formData.bikeModel}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div> */}
-
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-medium mb-1">
-                    Battery Health (%)
-                  </label>
-                  <input
-                    type="number"
-                    name="batteryHealth"
-                    value={formData.batteryHealth}
-                    onChange={handleChange}
-                    min="0"
-                    max="100"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* <div className="mb-4">
+                  <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-medium mb-1">
-                      Service Type*
+                      Bike Model
                     </label>
-                    <select
-                      name="serviceType"
-                      value={formData.serviceType}
+                    <input
+                      type="text"
+                      name="bikeModel"
+                      value={formData.bikeModel}
                       onChange={handleChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    >
-                      <option value="Regular Maintenance">Regular Maintenance</option>
-                      <option value="Battery Service">Battery Service</option>
-                      <option value="Motor Repair">Motor Repair</option>
-                      <option value="Controller Issues">Controller Issues</option>
-                      <option value="Brake System">Brake System</option>
-                      <option value="Software Update">Software Update</option>
-                      <option value="Full Inspection">Full Inspection</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div> */}
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-medium mb-1">
+                      Battery Health (%)
+                    </label>
+                    <input
+                      type="number"
+                      name="batteryHealth"
+                      value={formData.batteryHealth}
+                      onChange={handleChange}
+                      min="0"
+                      max="100"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-medium mb-1">
                       Service Category*
@@ -410,6 +457,24 @@ function Servicing() {
                       <option value="Free">Free</option>
                       <option value="Paid">Paid</option>
                       <option value="Instant">Instant</option>
+                    </select>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-gray-700 text-sm font-medium mb-1">
+                      Service Type
+                    </label>
+                    <select
+                      name="serviceType"
+                      value={formData.serviceType}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Regular Maintenance">Regular Maintenance</option>
+                      <option value="Battery Service">Battery Service</option>
+                      <option value="Tire Service">Tire Service</option>
+                      <option value="Brake Service">Brake Service</option>
+                      <option value="Electrical Service">Electrical Service</option>
+                      <option value="Other">Other</option>
                     </select>
                   </div>
                 </div>
@@ -476,11 +541,14 @@ function Servicing() {
                                 <input
                                   type="number"
                                   min="1"
-                                  max={part.quantity || 999}
+                                  max={getAvailableQuantity(part.id)}
                                   value={part.quantity}
                                   onChange={(e) => handlePartQuantityChange(part.id, e.target.value)}
                                   className="w-16 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
+                                <div className="text-xs text-gray-500 mt-1">
+                                  Max: {getAvailableQuantity(part.id)}
+                                </div>
                               </td>
                               <td className="px-2 py-2 text-sm text-right text-gray-900">₹{part.price}</td>
                               <td className="px-2 py-2 text-sm text-right text-gray-900">₹{(part.price * part.quantity).toFixed(2)}</td>
@@ -602,11 +670,7 @@ function Servicing() {
                 <div className="flex items-center justify-between mt-6">
                   <button
                     type="button"
-                    onClick={() => {
-                      resetForm();
-                      setIsEditing(false);
-                      setEditId(null);
-                    }}
+                    onClick={resetForm}
                     className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
                   >
                     Cancel
@@ -643,220 +707,256 @@ function Servicing() {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                Service Stats
+                Service Statistics
               </h2>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 transform transition-transform hover:scale-105">
-                  <p className="text-sm text-blue-600 font-medium">Total Services</p>
-                  <p className="text-2xl font-bold">{services.length}</p>
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <div className="text-2xl font-bold text-blue-800">{services.length}</div>
+                  <div className="text-blue-600 text-sm">Total Services</div>
                 </div>
-                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100 transform transition-transform hover:scale-105">
-                  <p className="text-sm text-yellow-600 font-medium">Pending</p>
-                  <p className="text-2xl font-bold">{services.filter(s => s.status === 'Pending').length}</p>
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <div className="text-2xl font-bold text-green-800">
+                    {services.filter(s => s.status === 'Completed').length}
+                  </div>
+                  <div className="text-green-600 text-sm">Completed</div>
                 </div>
-                <div className="bg-green-50 p-4 rounded-lg border border-green-100 transform transition-transform hover:scale-105">
-                  <p className="text-sm text-green-600 font-medium">Completed</p>
-                  <p className="text-2xl font-bold">{services.filter(s => s.status === 'Completed').length}</p>
+                <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                  <div className="text-2xl font-bold text-yellow-800">
+                    {services.filter(s => s.status === 'In Progress').length}
+                  </div>
+                  <div className="text-yellow-600 text-sm">In Progress</div>
                 </div>
-                <div className="bg-purple-50 p-4 rounded-lg border border-purple-100 transform transition-transform hover:scale-105">
-                  <p className="text-sm text-purple-600 font-medium">In Progress</p>
-                  <p className="text-2xl font-bold">{services.filter(s => s.status === 'In Progress').length}</p>
+                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                  <div className="text-2xl font-bold text-red-800">
+                    {services.filter(s => s.status === 'Pending').length}
+                  </div>
+                  <div className="text-red-600 text-sm">Pending</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Service List */}
+          {/* Services List */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100 transition-all hover:shadow-xl">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-800 flex items-center mb-4 sm:mb-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14-4H5m14 8H5" />
                   </svg>
-                  Service Records
+                  Service Records ({filteredServices.length})
                 </h2>
 
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => setFilter('all')}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${filter === 'all'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                  >
-                    All
-                  </button>
-                  <button
-                    onClick={() => setFilter('Pending')}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${filter === 'Pending'
-                      ? 'bg-yellow-500 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                  >
-                    Pending
-                  </button>
-                  <button
-                    onClick={() => setFilter('In Progress')}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${filter === 'In Progress'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                  >
-                    In Progress
-                  </button>
-                  <button
-                    onClick={() => setFilter('Completed')}
-                    className={`px-3 py-1 text-sm rounded-md transition-colors ${filter === 'Completed'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      }`}
-                  >
-                    Completed
-                  </button>
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                  <div className="relative w-full sm:w-64">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search by name..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setFilter('all')}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filter === 'all'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                    >
+                      All
+                    </button>
+                    <button
+                      onClick={() => setFilter('Pending')}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filter === 'Pending'
+                        ? 'bg-red-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                    >
+                      Pending
+                    </button>
+                    <button
+                      onClick={() => setFilter('In Progress')}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filter === 'In Progress'
+                        ? 'bg-yellow-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                    >
+                      In Progress
+                    </button>
+                    <button
+                      onClick={() => setFilter('Completed')}
+                      className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${filter === 'Completed'
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                    >
+                      Completed
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {loading ? (
-                <div className="text-center py-10">
-                  <svg className="animate-spin h-10 w-10 mx-auto text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <div className="flex justify-center items-center py-12">
+                  <svg className="animate-spin -ml-1 mr-3 h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <p className="mt-3 text-gray-600">Loading service records...</p>
+                  <span className="text-gray-600">Loading services...</span>
                 </div>
               ) : filteredServices.length === 0 ? (
-                <div className="text-center py-10 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <div className="text-center py-12">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
-                  <p className="mt-4 text-lg font-medium text-gray-600">No service records found</p>
-                  <p className="mt-2 text-gray-500">Schedule a new service to get started</p>
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">No services found</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {searchTerm ? 'Try adjusting your search terms.' : 'Get started by creating a new service request.'}
+                  </p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bike Model</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Type</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {filteredServices.map((service) => (
-                        <tr key={service.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-3">
+                <div className="space-y-4">
+                  {filteredServices.map((service) => (
+                    <div key={service.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-all">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-lg font-semibold text-gray-900">{service.customerName}</h3>
+                            <div className="flex items-center space-x-2">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                                service.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
+                                  service.status === 'Pending' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
+                                }`}>
+                                {service.status}
+                              </span>
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.serviceCategory === 'Free' ? 'bg-blue-100 text-blue-800' :
+                                service.serviceCategory === 'Paid' ? 'bg-purple-100 text-purple-800' :
+                                  'bg-orange-100 text-orange-800'
+                                }`}>
+                                {service.serviceCategory}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
                             <div className="flex items-center">
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">{service.customerName}</p>
-                                <p className="text-xs text-gray-500">{service.phone}</p>
+                              <svg className="h-4 w-4 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                              </svg>
+                              {service.phone}
+                            </div>
+                            <div className="flex items-center">
+                              <svg className="h-4 w-4 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
+                              </svg>
+                              {service.bikeModel || 'Not specified'}
+                            </div>
+                            <div className="flex items-center">
+                              <svg className="h-4 w-4 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
+                              </svg>
+                              {service.serviceType}
+                            </div>
+                            <div className="flex items-center">
+                              <svg className="h-4 w-4 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
+                              </svg>
+                              {service.date}
+                            </div>
+                          </div>
+
+                          {service.description && (
+                            <p className="text-sm text-gray-600 mb-3 bg-white p-2 rounded border">
+                              {service.description}
+                            </p>
+                          )}
+
+                          {service.spareParts && service.spareParts.length > 0 && (
+                            <div className="mb-3">
+                              <h4 className="text-sm font-medium text-gray-700 mb-2">Spare Parts:</h4>
+                              <div className="bg-white p-2 rounded border">
+                                {service.spareParts.map((part, index) => (
+                                  <div key={index} className="flex justify-between items-center text-sm">
+                                    <span>{part.name} (x{part.quantity})</span>
+                                    <span className="font-medium">₹{(part.price * part.quantity).toFixed(2)}</span>
+                                  </div>
+                                ))}
                               </div>
                             </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{service.bikeModel}</td>
-                          <td className="px-4 py-3">
-                            <div>
-                              <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                {service.serviceType}
-                              </span>
-                              {service.serviceCategory && (
-                                <span className={`mt-1 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${service.serviceCategory === 'Free'
-                                  ? 'bg-green-100 text-green-800'
-                                  : service.serviceCategory === 'Instant'
-                                    ? 'bg-purple-100 text-purple-800'
-                                    : 'bg-yellow-100 text-yellow-800'
+                          )}
+
+                          {service.serviceCategory !== 'Free' && (
+                            <div className="bg-white p-3 rounded border mb-3">
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600">Payment Status:</span>
+                                <span className={`font-medium ${service.paymentStatus === 'Completed' ? 'text-green-600' :
+                                  service.paymentStatus === 'Partially Paid' ? 'text-yellow-600' :
+                                    'text-red-600'
                                   }`}>
-                                  {service.serviceCategory}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{service.date}</td>
-                          <td className="px-4 py-3 text-sm">
-                            <span
-                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${service.status === 'Pending'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : service.status === 'In Progress'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : service.status === 'Completed'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}
-                            >
-                              {service.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            {service.serviceCategory === 'Free' ? (
-                              <span className="text-gray-500">N/A</span>
-                            ) : (
-                              <div>
-                                <span
-                                  className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${service.paymentStatus === 'Completed'
-                                    ? 'bg-green-100 text-green-800'
-                                    : service.paymentStatus === 'Partially Paid'
-                                      ? 'bg-yellow-100 text-yellow-800'
-                                      : 'bg-red-100 text-red-800'
-                                    }`}
-                                >
                                   {service.paymentStatus}
                                 </span>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  ${((parseFloat(service.paymentAmount) || 0) +
-                                    (service.spareParts ? service.spareParts.reduce((total, part) =>
-                                      total + (part.price * part.quantity), 0) : 0)).toFixed(2)}
-                                </p>
                               </div>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-right text-sm font-medium">
-                            <div className="flex justify-end space-x-2">
-                              <button
-                                onClick={() => handleEdit(service)}
-                                className="text-blue-600 hover:text-blue-900"
-                                title="Edit"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={() => handleDelete(service.id)}
-                                className="text-red-600 hover:text-red-900"
-                                title="Delete"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                              </button>
-                              <div className="relative inline-block text-left" title="Status">
-                                <button
-                                  className="text-gray-600 hover:text-gray-900 focus:outline-none"
-                                  onClick={() => {
-                                    const newStatus = service.status === 'Pending'
-                                      ? 'In Progress'
-                                      : service.status === 'In Progress'
-                                        ? 'Completed'
-                                        : 'Pending';
-                                    handleStatusChange(service.id, newStatus);
-                                  }}
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                  </svg>
-                                </button>
+                              <div className="flex justify-between items-center text-sm mt-1">
+                                <span className="text-gray-600">Total Amount:</span>
+                                <span className="font-semibold text-lg">
+                                  ₹{(
+                                    parseFloat(service.paymentAmount || 0) +
+                                    (service.spareParts || []).reduce((total, part) => total + (part.price * part.quantity), 0)
+                                  ).toFixed(2)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
+                                <span>Method: {service.paymentMethod}</span>
                               </div>
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mt-4 sm:mt-0 sm:ml-4">
+                          <select
+                            value={service.status}
+                            onChange={(e) => handleStatusChange(service.id, e.target.value)}
+                            className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleEdit(service)}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                              <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(service.id)}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            >
+                              <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -866,74 +966,87 @@ function Servicing() {
 
       {/* Spare Parts Selection Modal */}
       {showPartsModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen"></span>
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Select Spare Parts</h3>
-                    <div className="mt-2">
-                      <input
-                        type="text"
-                        placeholder="Search parts..."
-                        value={searchPart}
-                        onChange={e => setSearchPart(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-                      />
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Select Spare Parts</h3>
+                <button
+                  onClick={() => setShowPartsModal(false)}
+                  className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-                      {filteredSpareParts.length === 0 ? (
-                        <div className="text-center py-4">
-                          <p className="text-gray-500">No spare parts available</p>
-                        </div>
-                      ) : (
-                        <div className="max-h-60 overflow-y-auto">
-                          <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50 sticky top-0">
-                              <tr>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Part Name</th>
-                                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                                <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                              {filteredSpareParts.map((part) => (
-                                <tr key={part.id}>
-                                  <td className="px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900">{part.name}</td>
-                                  <td className="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-500">{part.quantity}</td>
-                                  <td className="px-3 py-2 whitespace-nowrap text-sm text-right text-gray-900">${part.price}</td>
-                                  <td className="px-3 py-2 whitespace-nowrap text-right text-sm font-medium">
-                                    <button
-                                      onClick={() => handleAddPart(part)}
-                                      disabled={part.quantity <= 0}
-                                      className={`px-3 py-1 rounded-md text-white ${part.quantity <= 0
-                                        ? 'bg-gray-300 cursor-not-allowed'
-                                        : 'bg-blue-600 hover:bg-blue-700'
-                                        }`}
-                                    >
-                                      Add
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
+              <div className="mb-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                   </div>
+                  <input
+                    type="text"
+                    placeholder="Search spare parts..."
+                    value={partsSearchTerm}
+                    onChange={(e) => setPartsSearchTerm(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
                 </div>
               </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+
+              <div className="max-h-96 overflow-y-auto">
+                {filteredSpareParts.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No spare parts found</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {filteredSpareParts.map((part) => {
+                      const availableQty = getAvailableQuantity(part.id);
+                      const isSelected = selectedParts.find(p => p.id === part.id);
+
+                      return (
+                        <div key={part.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">{part.name}</h4>
+                            <p className="text-sm text-gray-500">{part.description}</p>
+                            <div className="flex items-center mt-1 space-x-4">
+                              <span className="text-sm font-medium text-green-600">₹{part.price}</span>
+                              <span className="text-sm text-gray-500">Stock: {availableQty}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {isSelected && (
+                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                Added: {isSelected.quantity}
+                              </span>
+                            )}
+                            <button
+                              onClick={() => handleAddPart(part)}
+                              disabled={availableQty <= 0 || (isSelected && isSelected.quantity >= availableQty)}
+                              className={`px-3 py-1 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${availableQty <= 0 || (isSelected && isSelected.quantity >= availableQty)
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
+                                }`}
+                            >
+                              {availableQty <= 0 ? 'Out of Stock' : 'Add'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex justify-end">
                 <button
-                  type="button"
                   onClick={() => setShowPartsModal(false)}
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Done
                 </button>
