@@ -46,7 +46,6 @@ const Header = () => {
     { path: '/spare-parts', name: 'Spare Parts', icon: Package },
     { path: '/maintenance', name: 'Maintenance', icon: Wrench },
     { path: '/services', name: 'Services', icon: Settings },
-    // { path: '/bill', name: 'Billing', icon: BrickWall },
   ];
 
   // Check if current route is active
