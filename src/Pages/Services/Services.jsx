@@ -126,48 +126,48 @@ function Servicing() {
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitLoading(true);
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setSubmitLoading(true);
 
-    try {
-      const serviceData = {
-        ...formData,
-        spareParts: selectedParts.map(part => ({
-          id: part.id,
-          name: part.name,
-          quantity: part.quantity,
-          price: part.price
-        }))
-      };
+  //   try {
+  //     const serviceData = {
+  //       ...formData,
+  //       spareParts: selectedParts.map(part => ({
+  //         id: part.id,
+  //         name: part.name,
+  //         quantity: part.quantity,
+  //         price: part.price
+  //       }))
+  //     };
 
-      if (isEditing && editId) {
-        await restoreOriginalPartsInventory();
-        if (selectedParts.length > 0) {
-          await deductPartsInventory(selectedParts);
-        }
-        const serviceRef = ref(database, `bikeServices/${editId}`);
-        await update(serviceRef, serviceData);
-        showSuccessMessage('Service updated successfully!');
-      } else {
-        if (selectedParts.length > 0) {
-          await deductPartsInventory(selectedParts);
-        }
-        const servicesRef = ref(database, 'bikeServices');
-        await push(servicesRef, {
-          ...serviceData,
-          timestamp: Date.now(),
-        });
-        showSuccessMessage('Service scheduled successfully!');
-      }
-      resetForm();
-    } catch (error) {
-      console.error('Error saving service:', error);
-      alert(`Error: ${error.message}`);
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
+  //     if (isEditing && editId) {
+  //       await restoreOriginalPartsInventory();
+  //       if (selectedParts.length > 0) {
+  //         await deductPartsInventory(selectedParts);
+  //       }
+  //       const serviceRef = ref(database, `bikeServices/${editId}`);
+  //       await update(serviceRef, serviceData);
+  //       showSuccessMessage('Service updated successfully!');
+  //     } else {
+  //       if (selectedParts.length > 0) {
+  //         await deductPartsInventory(selectedParts);
+  //       }
+  //       const servicesRef = ref(database, 'bikeServices');
+  //       await push(servicesRef, {
+  //         ...serviceData,
+  //         timestamp: Date.now(),
+  //       });
+  //       showSuccessMessage('Service scheduled successfully!');
+  //     }
+  //     resetForm();
+  //   } catch (error) {
+  //     console.error('Error saving service:', error);
+  //     alert(`Error: ${error.message}`);
+  //   } finally {
+  //     setSubmitLoading(false);
+  //   }
+  // };
 
   // Show success message temporarily
   const showSuccessMessage = (message) => {
